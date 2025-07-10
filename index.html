@@ -49,10 +49,9 @@
       color: transparent !important;
       text-shadow: 0 0 0px rgba(0, 0, 0, 0.2);
       pointer-events: none;
-      transform-origin: center center;
       transform: translate(-50%, -50%) scale(0) rotate(0deg);
       opacity: 0;
-      transition: transform 0.6s ease-in-out, opacity 0.6s ease-in-out;
+      transition: transform 0.4s ease-in-out, opacity 0.4s ease-in-out;
       display: inline-block;
       will-change: transform, opacity;
       backface-visibility: hidden;
@@ -159,23 +158,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!pi.startsWith("3.")) pi = "3." + pi;
     });
 
+  // Redirect help button to external page
   document.getElementById('helpButton').addEventListener('click', () => {
     window.location.href = "https://funpi.w3spaces.com/help";
-  });
-
-  let keyPressTimes = {};
-  const comboTimeout = 300;
-  document.addEventListener('keydown', (event) => {
-    const key = event.key.toLowerCase();
-    const now = Date.now();
-    keyPressTimes[key] = now;
-
-    if (
-      (key === 'd' && keyPressTimes['5'] && now - keyPressTimes['5'] <= comboTimeout) ||
-      (key === '5' && keyPressTimes['d'] && now - keyPressTimes['d'] <= comboTimeout)
-    ) {
-      window.location.href = 'https://github.com/edisonrees/funpi';
-    }
   });
 
   if (document.cookie.split(';').some(c => c.trim().startsWith('tried355113=true'))) {
@@ -233,6 +218,25 @@ function wrapPiChars(node) {
   }
 }
 
+function animatePiSymbol() {
+  const el = document.getElementById("piSymbol");
+  el.style.transition = "none";
+  el.style.opacity = "1";
+  el.style.transform = "translate(-50%, -50%) scale(0) rotate(0deg)";
+
+  requestAnimationFrame(() => {
+    el.style.transition = "transform 600ms ease-in-out, opacity 600ms ease-in-out";
+    el.style.transform = "translate(-50%, -50%) scale(2) rotate(0deg)";
+  });
+
+  // Hold peak size for 700ms, then fade out over 400ms
+  setTimeout(() => {
+    el.style.transition = "transform 400ms ease-in-out, opacity 400ms ease-in-out";
+    el.style.transform = "translate(-50%, -50%) scale(0) rotate(0deg)";
+    el.style.opacity = "0";
+  }, 1300);
+}
+
 function showPi() {
   const n = parseInt(document.getElementById("digitInput").value, 10);
   const resultDiv = document.getElementById("result");
@@ -245,6 +249,7 @@ function showPi() {
     return;
   }
   resultDiv.textContent = `π to ${n} digits:\n` + pi.slice(0, n + 2);
+  animatePiSymbol();
 }
 
 function copyPi() {
@@ -280,7 +285,7 @@ function checkPi() {
   if (error < 0.000001) {
     const gradient = gradients[Math.floor(Math.random() * gradients.length)];
     piSymbol.style.background = gradient;
-    animatePiSymbol(piSymbol);
+    animatePiSymbol();
   }
 }
 
@@ -295,63 +300,6 @@ const gradients = [
   "linear-gradient(0deg, #ee9ca7 0%, #ffdde1 100%)",
   "linear-gradient(0deg, #43cea2 0%, #185a9d 100%)"
 ];
-
-function animatePiSymbol(el) {
-  // 1 in 500 chance full-screen surprise
-  if (Math.random() < 1/500) {
-    const overlay = document.createElement('div');
-    overlay.style.position = 'fixed';
-    overlay.style.top = 0;
-    overlay.style.left = 0;
-    overlay.style.width = '100vw';
-    overlay.style.height = '100vh';
-    overlay.style.backgroundImage = 'url(https://i.ytimg.com/vi/vPiTMIhREC4/hq720.jpg?sqp=-oaymwEhCK4FEIIDSFryq4qpAxMIARUAAAAAGAElAADIQj0AgKJD&rs=AOn4CLAhw2_V_GZRk_mazrPxWVeaBtTHEA)';
-    overlay.style.backgroundSize = 'cover';
-    overlay.style.backgroundPosition = 'center';
-    overlay.style.zIndex = '10000';
-    overlay.style.opacity = '0';
-    overlay.style.transition = 'opacity 0.6s ease-in-out';
-    document.body.appendChild(overlay);
-
-    requestAnimationFrame(() => {
-      overlay.style.opacity = '1';
-    });
-
-    setTimeout(() => {
-      overlay.style.opacity = '0';
-      overlay.addEventListener('transitionend', () => {
-        if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
-      });
-    }, 3000);
-
-    el.style.transition = "none";
-    el.style.opacity = "1";
-    el.style.transform = "translate(-50%, -50%) scale(3) rotate(0deg)";
-    setTimeout(() => {
-      el.style.transition = "transform 400ms ease-in-out, opacity 400ms ease-in-out";
-      el.style.transform = "translate(-50%, -50%) scale(0) rotate(0deg)";
-      el.style.opacity = "0";
-    }, 2500);
-
-    return;
-  }
-
-  // Normal animation: scale from 0 to 3, hold, fade out
-  el.style.transition = "none";
-  el.style.opacity = "1";
-  el.style.transform = "translate(-50%, -50%) scale(0) rotate(0deg)";
-
-  requestAnimationFrame(() => {
-    el.style.transition = "transform 600ms ease-in-out, opacity 600ms ease-in-out";
-    el.style.transform = "translate(-50%, -50%) scale(3) rotate(0deg)";
-  });
-
-  setTimeout(() => {
-    el.style.transition = "transform 400ms ease-in-out, opacity 400ms ease-in-out";
-    el.style.transform = "translate(-50%, -50%) scale(0) rotate(0deg)";
-    el.style.opacity = "0";
-  }, 1600);
-}
 
 function playTone(ctx, frequency, startTime, duration) {
   const osc = ctx.createOscillator();
