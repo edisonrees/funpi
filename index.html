@@ -1,20 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <!-- Google tag (gtag.js) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-10P71TWFVE"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-10P71TWFVE');
-  </script>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-10P71TWFVE"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
 
+  gtag('config', 'G-10P71TWFVE');
+</script>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>π Playground</title>
   <link href="https://fonts.googleapis.com/css2?family=Linux+Libertine&display=swap" rel="stylesheet" />
   <style>
+    html {}
     body {
       background: #f0f0f0;
       font-family: Arial, sans-serif;
@@ -29,8 +30,10 @@
     #result, #yourPi {
       font-family: monospace;
       font-size: 1.2em;
+      margin-top: 1em;
       max-width: 800px;
-      margin: 1em auto;
+      margin-left: auto;
+      margin-right: auto;
       white-space: pre-wrap;
       word-break: break-word;
     }
@@ -39,13 +42,13 @@
       top: 50%;
       left: 50%;
       font-size: 20em;
-      font-family: 'Linux Libertine', serif;
+      font-family: 'Linux Libertine', serif !important;
       font-weight: bold;
       background: linear-gradient(90deg, #c0c0c0, #3b82f6, #6b21a8);
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
-      color: transparent;
+      -webkit-background-clip: text !important;
+      background-clip: text !important;
+      -webkit-text-fill-color: transparent !important;
+      color: transparent !important;
       text-shadow: 0 0 0px rgba(0, 0, 0, 0.2);
       pointer-events: none;
       transform: translate(-50%, -50%) scale(0) rotate(0deg);
@@ -56,11 +59,44 @@
       backface-visibility: hidden;
       z-index: 999;
     }
+    .pi-symbol {
+      font-family: 'Linux Libertine', serif !important;
+      font-size: inherit;
+      line-height: inherit;
+      vertical-align: baseline;
+    }
+    #helpButton {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background-color: #6c757d;
+      color: white;
+      font-size: 1.5em;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      transition: background-color 0.2s ease;
+    }
+    #helpButton:hover {
+      background-color: #5a6268;
+    }
+    #tryHint {
+      font-style: italic;
+      color: #555;
+      user-select: none;
+    }
   </style>
 </head>
 <body>
   <h1>π Playground</h1>
-  <p id="tryHint">Try 355/113!</p>
 
   <p>How many digits of π would you like to see?</p>
   <input type="number" id="digitInput" min="1" max="1000000" value="100" />
@@ -74,163 +110,159 @@
   <button onclick="checkPi()">Check</button>
   <div id="yourPi"></div>
 
+  <p id="tryHint">Try 355/113!</p>
+
   <h2>Play π on Piano</h2>
   <label>BPM: <input type="number" id="bpmInput" value="120" min="30" max="300" /></label>
   <label>Seconds: <input type="number" id="durationInput" value="10" min="1" max="120" /></label>
   <button onclick="playPiPiano()">Play π</button>
 
   <div id="piSymbol">π</div>
+  <button id="helpButton" aria-label="Help" title="Help" onclick="window.location.href='/help'">?</button>
 
 <script>
-  let pi = null;  // Will hold loaded pi digits as string
+let pi = "";
+let playContext = null;
+let playTimeouts = [];
 
-  // Load pi digits from pi.html on page load
-  async function loadPi() {
-    try {
-      const response = await fetch('pi.html');
-      if (!response.ok) throw new Error('Failed to load pi.html');
-      let text = await response.text();
-      // Extract digits only, allow for decimal point at start
+document.addEventListener('DOMContentLoaded', () => {
+  fetch("pi.html")
+    .then(res => res.text())
+    .then(text => {
       pi = text.replace(/[^0-9.]/g, '');
-      if (!pi.startsWith('3.')) pi = '3.' + pi;
-      console.log('π digits loaded, length:', pi.length);
-    } catch (e) {
-      console.error('Error loading π digits:', e);
-      pi = null;
-    }
-  }
-
-  // Show requested digits of π
-  function showPi() {
-    if (!pi) return alert('π is still loading, please wait.');
-    const n = parseInt(document.getElementById('digitInput').value, 10);
-    const maxDigits = pi.length - 2; // exclude '3.'
-    const resultDiv = document.getElementById('result');
-    if (isNaN(n) || n < 1 || n > maxDigits) {
-      resultDiv.textContent = `Enter a number from 1 to ${maxDigits}`;
-      return;
-    }
-    resultDiv.textContent = `π to ${n} digits:\n` + pi.slice(0, n + 2);
-  }
-
-  // Copy requested digits of π to clipboard
-  function copyPi() {
-    if (!pi) return alert('π is still loading, please wait.');
-    const n = parseInt(document.getElementById('digitInput').value, 10);
-    if (isNaN(n)) return alert('Invalid number of digits.');
-    const textToCopy = pi.slice(0, n + 2);
-    navigator.clipboard.writeText(textToCopy).then(() => {
-      alert('Copied!');
-    }).catch(() => {
-      alert('Failed to copy. Please copy manually.');
+      if (!pi.startsWith("3.")) pi = "3." + pi;
+      console.log("π digits loaded:", pi.length);
+    })
+    .catch(err => {
+      console.error("Couldn't load pi.html:", err);
     });
+});
+
+function showPi() {
+  const n = parseInt(document.getElementById("digitInput").value, 10);
+  const resultDiv = document.getElementById("result");
+  if (!pi) {
+    resultDiv.textContent = "π is still loading... please wait.";
+    return;
   }
-
-  // Check user's approximation of π
-  function checkPi() {
-    if (!pi) return alert('π is still loading, please wait.');
-    const num = parseFloat(document.getElementById('numInput').value);
-    const den = parseFloat(document.getElementById('denInput').value);
-    const result = document.getElementById('yourPi');
-    const piSymbol = document.getElementById('piSymbol');
-    if (isNaN(num) || isNaN(den) || den === 0) {
-      result.textContent = 'Invalid fraction.';
-      return;
-    }
-    const approx = num / den;
-    result.textContent = `Your approximation: ${approx}`;
-    document.getElementById('tryHint').style.display = 'none';
-    document.cookie = "tried355113=true; max-age=" + (60*60*24*365);
-
-    const error = Math.abs(approx - Math.PI);
-    if (error < 0.000001) {
-      const gradients = [
-        "linear-gradient(0deg, #a1c4fd 0%, #c2e9fb 100%)",
-        "linear-gradient(0deg, #fbc7a4 0%, #fe938c 50%, #b45f06 100%)",
-        "linear-gradient(0deg, #a8e063 0%, #56ab2f 100%)",
-        "linear-gradient(0deg, #5f2c82 0%, #49a09d 100%)",
-        "linear-gradient(0deg, #f7971e 0%, #ffd200 100%)",
-        "linear-gradient(0deg, #c0c0c0, #3b82f6, #6b21a8)",
-        "linear-gradient(0deg, #89f7fe 0%, #66a6ff 100%)",
-        "linear-gradient(0deg, #ee9ca7 0%, #ffdde1 100%)",
-        "linear-gradient(0deg, #43cea2 0%, #185a9d 100%)",
-        "linear-gradient(0deg, #f7971e 0%, #ffd200 100%)"
-      ];
-      const gradient = gradients[Math.floor(Math.random() * gradients.length)];
-      piSymbol.style.background = gradient;
-      piSymbol.style.transform = "translate(-50%, -50%) scale(1.5) rotate(10deg)";
-      piSymbol.style.opacity = "1";
-      setTimeout(() => {
-        piSymbol.style.transform = "translate(-50%, -50%) scale(0) rotate(0deg)";
-        piSymbol.style.opacity = "0";
-      }, 800);
-    }
+  if (isNaN(n) || n < 1 || n > pi.length - 2) {
+    resultDiv.textContent = `Enter a number from 1 to ${pi.length - 2}`;
+    return;
   }
+  resultDiv.textContent = `π to ${n} digits:\n` + pi.slice(0, n + 2);
+}
 
-  // Play tone helper
-  function playTone(ctx, frequency, startTime, duration) {
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.frequency.value = frequency;
-    osc.type = 'sine';
-    gain.gain.setValueAtTime(0.0001, startTime);
-    gain.gain.exponentialRampToValueAtTime(0.3, startTime + 0.01);
-    gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start(startTime);
-    osc.stop(startTime + duration);
+function copyPi() {
+  const n = parseInt(document.getElementById("digitInput").value, 10);
+  if (!pi || isNaN(n)) return alert("π not ready or invalid input");
+  const tempInput = document.createElement('textarea');
+  tempInput.value = pi.slice(0, n + 2);
+  document.body.appendChild(tempInput);
+  tempInput.select();
+  try {
+    document.execCommand('copy');
+    alert("Copied!");
+  } catch (err) {
+    alert('Failed to copy text. Please copy manually.');
   }
+  document.body.removeChild(tempInput);
+}
 
-  // Play π digits as piano notes for a chosen duration and BPM
-  async function playPiPiano() {
-    if (!pi) {
-      alert('π digits still loading, please wait.');
-      return;
-    }
-    const bpm = parseInt(document.getElementById('bpmInput').value, 10);
-    const seconds = parseInt(document.getElementById('durationInput').value, 10);
-    if (isNaN(bpm) || bpm < 30 || bpm > 300 || isNaN(seconds) || seconds < 1) {
-      alert('Invalid BPM or duration');
-      return;
-    }
+const gradients = [
+  "linear-gradient(0deg, #a1c4fd 0%, #c2e9fb 100%)",
+  "linear-gradient(0deg, #fbc7a4 0%, #fe938c 50%, #b45f06 100%)",
+  "linear-gradient(0deg, #a8e063 0%, #56ab2f 100%)",
+  "linear-gradient(0deg, #5f2c82 0%, #49a09d 100%)",
+  "linear-gradient(0deg, #f7971e 0%, #ffd200 100%)",
+  "linear-gradient(0deg, #c0c0c0, #3b82f6, #6b21a8)",
+  "linear-gradient(0deg, #89f7fe 0%, #66a6ff 100%)",
+  "linear-gradient(0deg, #ee9ca7 0%, #ffdde1 100%)",
+  "linear-gradient(0deg, #43cea2 0%, #185a9d 100%)",
+  "linear-gradient(0deg, #f7971e 0%, #ffd200 100%)"
+];
 
-    if (window.playContext) {
-      window.playContext.close();
-      window.playContext = null;
-    }
-    window.playContext = new AudioContext();
-
-    const noteDuration = 60 / bpm;
-    const maxNotes = Math.floor(seconds / noteDuration);
-    let currentTime = window.playContext.currentTime + 0.1;
-
-    for (let i = 0, playedNotes = 0; playedNotes < maxNotes && i < pi.length; i++) {
-      const digit = pi[i];
-      if (digitToNote.hasOwnProperty(digit)) {
-        playTone(window.playContext, digitToNote[digit], currentTime, noteDuration * 0.9);
-        currentTime += noteDuration;
-        playedNotes++;
-      }
-    }
+function checkPi() {
+  const num = parseFloat(document.getElementById("numInput").value);
+  const den = parseFloat(document.getElementById("denInput").value);
+  const result = document.getElementById("yourPi");
+  const piSymbol = document.getElementById("piSymbol");
+  if (isNaN(num) || isNaN(den) || den === 0) {
+    result.textContent = "Invalid fraction.";
+    return;
   }
+  const approx = num / den;
+  result.textContent = `Your approximation: ${approx}`;
+  document.getElementById('tryHint').style.display = 'none';
+  document.cookie = "tried355113=true; max-age=" + (60*60*24*365);
+  const error = Math.abs(approx - Math.PI);
+  if (error < 0.000001) {
+    const gradient = gradients[Math.floor(Math.random() * gradients.length)];
+    piSymbol.style.background = gradient;
+    piSymbol.style.transform = "translate(-50%, -50%) scale(1.5) rotate(10deg)";
+    piSymbol.style.opacity = "1";
+    setTimeout(() => {
+      piSymbol.style.transform = "translate(-50%, -50%) scale(0) rotate(0deg)";
+      piSymbol.style.opacity = "0";
+    }, 800);
+  }
+}
 
-  // Map digits to frequencies for piano notes
-  const digitToNote = {
-    '0': 830.61,
-    '1': 440.00,
-    '2': 466.16,
-    '3': 493.88,
-    '4': 523.25,
-    '5': 587.33,
-    '6': 659.25,
-    '7': 698.46,
-    '8': 932.33,
-    '9': 1046.50
-  };
+const digitToNote = {
+  '0': { freq: 830.61, name: "G#5 / Ab5" },
+  '1': { freq: 440.00, name: "A4" },
+  '2': { freq: 466.16, name: "A#4 / Bb4" },
+  '3': { freq: 493.88, name: "B4" },
+  '4': { freq: 523.25, name: "C5" },
+  '5': { freq: 587.33, name: "D5" },
+  '6': { freq: 659.25, name: "E5" },
+  '7': { freq: 698.46, name: "F5" },
+  '8': { freq: 932.33, name: "A#5 / Bb5" },
+  '9': { freq: 1046.50, name: "C6" }
+};
 
-  // Load π digits immediately on page load
-  window.addEventListener('load', loadPi);
+function playTone(ctx, frequency, startTime, duration) {
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.frequency.value = frequency;
+  osc.type = 'sine';
+  gain.gain.setValueAtTime(0.0001, startTime);
+  gain.gain.exponentialRampToValueAtTime(0.3, startTime + 0.01);
+  gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start(startTime);
+  osc.stop(startTime + duration);
+}
+
+function playPiPiano() {
+  if (!pi) {
+    alert("π digits still loading...");
+    return;
+  }
+  if (playContext) {
+    playContext.close();
+    playTimeouts.forEach(t => clearTimeout(t));
+    playTimeouts = [];
+    playContext = null;
+  }
+  const bpm = parseInt(document.getElementById('bpmInput').value, 10);
+  const seconds = parseInt(document.getElementById('durationInput').value, 10);
+  if (isNaN(bpm) || bpm < 30 || bpm > 300 || isNaN(seconds) || seconds < 1) {
+    alert('Invalid BPM or duration');
+    return;
+  }
+  playContext = new AudioContext();
+  const noteDuration = 60 / bpm;
+  let currentTime = playContext.currentTime + 0.1;
+  const maxNotes = Math.floor((seconds * bpm) / 60);
+  for (let i = 0; i < maxNotes && i < pi.length; i++) {
+    const digit = pi[i];
+    if (digitToNote[digit]) {
+      playTone(playContext, digitToNote[digit].freq, currentTime, noteDuration * 0.9);
+    }
+    currentTime += noteDuration;
+  }
+}
 </script>
 </body>
 </html>
