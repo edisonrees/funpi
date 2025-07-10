@@ -141,7 +141,7 @@
   <button id="helpButton" aria-label="Help" title="Help">?</button>
   <canvas id="faviconPreview" width="64" height="64"></canvas>
   
-  <footer>Version 1.0.2</footer>
+  <footer>Version 1.0.3 Tangent</footer>
 
 <script>
 let pi = "";
@@ -301,7 +301,6 @@ function checkPi() {
   const num = parseFloat(document.getElementById("numInput").value);
   const den = parseFloat(document.getElementById("denInput").value);
   const result = document.getElementById("yourPi");
-  const piSymbol = document.getElementById("piSymbol");
   if (isNaN(num) || isNaN(den) || den === 0) {
     result.textContent = "Invalid fraction.";
     return;
@@ -313,10 +312,12 @@ function checkPi() {
   const error = Math.abs(approx - Math.PI);
   if (error < 0.000001) {
     const gradient = gradients[Math.floor(Math.random() * gradients.length)];
+    const piSymbol = document.getElementById("piSymbol");
     piSymbol.style.background = gradient;
     animatePiSymbol();
   }
 }
+
 
 const gradients = [
   "linear-gradient(0deg, #a1c4fd 0%, #c2e9fb 100%)",
