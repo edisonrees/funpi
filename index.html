@@ -141,7 +141,7 @@
   <button id="helpButton" aria-label="Help" title="Help">?</button>
   <canvas id="faviconPreview" width="64" height="64"></canvas>
   
-  <footer>Version 1.0.1</footer>
+  <footer>Version 1.0.2</footer>
 
 <script>
 let pi = "";
@@ -237,10 +237,10 @@ function animatePiSymbol() {
   el.style.opacity = "1";
   el.style.transform = "translate(-50%, -50%) scale(0) rotate(0deg)";
 
-  // Zoom in
+  // Zoom in + rotate from 0° to 10°
   requestAnimationFrame(() => {
     el.style.transition = "transform 600ms ease-in-out, opacity 600ms ease-in-out";
-    el.style.transform = "translate(-50%, -50%) scale(2) rotate(0deg)";
+    el.style.transform = "translate(-50%, -50%) scale(2) rotate(10deg)";
   });
 
   // Hold peak and do rotation swing for 700ms
