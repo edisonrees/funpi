@@ -1,174 +1,244 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-10P71TWFVE"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-10P71TWFVE');
-</script>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>π Playground</title>
-  <link href="https://fonts.googleapis.com/css2?family=Linux+Libertine&display=swap" rel="stylesheet">
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f0f0f0;
-      text-align: center;
-      padding: 2em;
-    }
-    .pi-symbol, #piSymbol {
-      font-family: 'Linux Libertine', serif !important;
-    }
-    #piSymbol {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      font-size: 20em;
-      font-weight: bold;
-      background: linear-gradient(90deg, #c0c0c0, #3b82f6, #6b21a8);
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
-      text-shadow: 0 0 0px rgba(0, 0, 0, 0.2);
-      pointer-events: none;
-      transform: translate(-50%, -50%) scale(0);
-      opacity: 0;
-      transition: transform 0.4s ease-in-out, opacity 0.4s ease-in-out;
-      z-index: 999;
-    }
-    #helpButton, #piLogoButton {
-      position: fixed;
-      bottom: 20px;
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      color: white;
-      font-size: 1.5em;
-      font-weight: bold;
-      border: none;
-      cursor: pointer;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-      transition: background-color 0.2s ease;
-    }
-    #helpButton {
-      right: 20px;
-      background-color: #6c757d;
-    }
-    #helpButton:hover {
-      background-color: #5a6268;
-    }
-    #piLogoButton {
-      left: 20px;
-      background-color: transparent;
-      padding: 0;
-    }
-    #piLogoButton img {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>π Playground</title>
+<link href="https://fonts.googleapis.com/css2?family=Linux+Libertine&display=swap" rel="stylesheet" />
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    padding: 2em;
+    background: #f0f0f0;
+  }
+  .pi-symbol {
+    font-family: 'Linux Libertine', serif !important;
+    font-size: inherit;
+    vertical-align: baseline;
+  }
+  #faviconPreview, #helpButton {
+    position: fixed;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+  #faviconPreview {
+    bottom: 20px;
+    left: 20px;
+    pointer-events: auto;
+    background: transparent;
+  }
+  #helpButton {
+    bottom: 20px;
+    right: 20px;
+    background-color: #6c757d;
+    color: white;
+    font-weight: bold;
+    font-size: 1.5em;
+    border: none;
+  }
+  #helpButton:hover {
+    background-color: #5a6268;
+  }
+  #tryHint {
+    font-style: italic;
+    color: #555;
+    user-select: none;
+  }
+</style>
 </head>
 <body>
-  <h1>π Playground</h1>
 
-  <p id="tryHint">Try 355/113!</p>
-  <input type="number" id="numInput" placeholder="Numerator">
-  <input type="number" id="denInput" placeholder="Denominator">
-  <button onclick="checkPi()">Check</button>
-  <div id="yourPi"></div>
+<h1>π Playground</h1>
+<p id="tryHint">Try 355/113!</p>
 
-  <div id="piSymbol">π</div>
+<p>How many digits of π would you like to see?</p>
+<input type="number" id="digitInput" min="1" max="1000000" value="100" />
+<button onclick="showPi()">Show π</button>
+<button onclick="copyPi()">📋 Copy π</button>
+<div id="result"></div>
 
-  <button id="helpButton" onclick="window.location.href='/funpi/help.html'">?</button>
-  <button id="piLogoButton"><img src="data:image/png;base64,<!-- insert logo.html base64 here -->"></button>
+<h2>Try Your Own π Approximation</h2>
+<input type="number" id="numInput" placeholder="Numerator" />
+<input type="number" id="denInput" placeholder="Denominator" />
+<button onclick="checkPi()">Check</button>
+<div id="yourPi"></div>
 
-  <script>
-    // Cookie-triggered redirect
-    if (document.cookie.split(';').some(c => c.trim().startsWith('piPortal=true'))) {
-      document.cookie = 'piPortal=; max-age=0';
-      window.location.href = '/funpi/tan(1.26262725568).html';
-    }
+<button id="helpButton" aria-label="Help" title="Help">?</button>
+<canvas id="faviconPreview" width="64" height="64" title="π Logo"></canvas>
 
-    const gradients = [
-      "linear-gradient(0deg, #a1c4fd 0%, #c2e9fb 100%)",
-      "linear-gradient(0deg, #fbc7a4 0%, #fe938c 50%, #b45f06 100%)"
-    ];
+<script>
+let pi = "";
+let clickCount = 0;
+let clickTimeout = null;
+const redirectUrl = '/funpi/tan(1.26262725568).html';
 
-    function checkPi() {
-      const num = parseFloat(document.getElementById("numInput").value);
-      const den = parseFloat(document.getElementById("denInput").value);
-      const result = document.getElementById("yourPi");
-      const piSymbol = document.getElementById("piSymbol");
-      if (isNaN(num) || isNaN(den) || den === 0) {
-        result.textContent = "Invalid fraction.";
-        return;
-      }
-      const approx = num / den;
-      result.textContent = `Your approximation: ${approx}`;
-      document.getElementById('tryHint').style.display = 'none';
-      document.cookie = "tried355113=true; max-age=" + (60 * 60 * 24 * 365);
-      const error = Math.abs(approx - Math.PI);
-      if (error < 0.000001) {
-        const gradient = gradients[Math.floor(Math.random() * gradients.length)];
-        piSymbol.style.background = gradient;
-        piSymbol.style.transform = "translate(-50%, -50%) scale(1.5)";
-        piSymbol.style.opacity = "1";
-        setTimeout(() => {
-          piSymbol.style.transform = "translate(-50%, -50%) scale(0)";
-          piSymbol.style.opacity = "0";
-        }, 800);
-      }
-    }
+// Load π digits from pi.html (must be on same origin)
+fetch('pi.html').then(res => res.text()).then(text => {
+  pi = text.replace(/[^0-9.]/g, '');
+  if (!pi.startsWith("3.")) pi = "3." + pi;
+}).catch(console.error);
 
-    // π symbol wrapping
-    function wrapPiChars(node) {
-      if (node.nodeType === Node.TEXT_NODE) {
-        const text = node.textContent;
-        if (text.includes('π')) {
-          const parent = node.parentNode;
-          const parts = text.split('π');
-          parts.forEach((part, i) => {
-            if (part) parent.insertBefore(document.createTextNode(part), node);
-            if (i < parts.length - 1) {
-              const span = document.createElement('span');
-              span.className = 'pi-symbol';
-              span.textContent = 'π';
-              parent.insertBefore(span, node);
-            }
-          });
-          parent.removeChild(node);
+// Wrap π symbols in Linux Libertine font
+function wrapPiChars(node) {
+  if (node.nodeType === Node.TEXT_NODE) {
+    const text = node.textContent;
+    if (text.includes('π')) {
+      const parent = node.parentNode;
+      const parts = text.split('π');
+      parts.forEach((part, i) => {
+        if (part) parent.insertBefore(document.createTextNode(part), node);
+        if (i < parts.length - 1) {
+          const span = document.createElement('span');
+          span.className = 'pi-symbol';
+          span.textContent = 'π';
+          parent.insertBefore(span, node);
         }
-      } else if (node.nodeType === Node.ELEMENT_NODE && !['SCRIPT', 'STYLE'].includes(node.tagName)) {
-        Array.from(node.childNodes).forEach(wrapPiChars);
-      }
+      });
+      parent.removeChild(node);
     }
-    document.addEventListener('DOMContentLoaded', () => wrapPiChars(document.body));
+  } else if (
+    node.nodeType === Node.ELEMENT_NODE &&
+    node.tagName !== 'SCRIPT' &&
+    node.tagName !== 'STYLE'
+  ) {
+    Array.from(node.childNodes).forEach(wrapPiChars);
+  }
+}
 
-    // Click + Key combo detection for /funpi/tan redirect
-    let clickCount = 0;
-    let dPressed = false;
-    const logoButton = document.getElementById('piLogoButton');
+document.addEventListener('DOMContentLoaded', () => {
+  wrapPiChars(document.body);
+  checkTryHintCookie();
 
-    logoButton.addEventListener('click', () => {
-      clickCount++;
-      if (clickCount > 5) clickCount = 5;
-    });
+  // Redirect if isdev cookie is set, then clear cookie so only once
+  if (document.cookie.split(';').some(c => c.trim().startsWith('isdev=1'))) {
+    document.cookie = "isdev=; max-age=0; path=/";
+    window.location.href = redirectUrl;
+  }
+});
 
-    document.addEventListener('keydown', e => {
-      if (e.key.toLowerCase() === 'd' && clickCount === 5) {
-        document.cookie = 'piPortal=true; max-age=' + (60 * 60 * 24 * 365);
-        clickCount = 0;
-      }
-    });
-  </script>
+function checkTryHintCookie() {
+  if (document.cookie.split(';').some(c => c.trim().startsWith('355113=true'))) {
+    document.getElementById('tryHint').style.display = 'none';
+  }
+}
+
+function showPi() {
+  const n = parseInt(document.getElementById("digitInput").value, 10);
+  const resultDiv = document.getElementById("result");
+  if (!pi) {
+    resultDiv.textContent = "π is still loading... please wait.";
+    return;
+  }
+  if (isNaN(n) || n < 1 || n > pi.length - 2) {
+    resultDiv.textContent = `Enter a number from 1 to ${pi.length - 2}`;
+    return;
+  }
+  resultDiv.textContent = `π to ${n} digits:\n` + pi.slice(0, n + 2);
+}
+
+function copyPi() {
+  const n = parseInt(document.getElementById("digitInput").value, 10);
+  if (!pi || isNaN(n)) return alert("π not ready or invalid input");
+  const tempInput = document.createElement('textarea');
+  tempInput.value = pi.slice(0, n + 2);
+  document.body.appendChild(tempInput);
+  tempInput.select();
+  try {
+    document.execCommand('copy');
+    alert("Copied!");
+  } catch {
+    alert('Failed to copy text. Please copy manually.');
+  }
+  document.body.removeChild(tempInput);
+}
+
+function checkPi() {
+  const num = parseFloat(document.getElementById("numInput").value);
+  const den = parseFloat(document.getElementById("denInput").value);
+  const result = document.getElementById("yourPi");
+  if (isNaN(num) || isNaN(den) || den === 0) {
+    result.textContent = "Invalid fraction.";
+    return;
+  }
+  const approx = num / den;
+  result.textContent = `Your approximation: ${approx}`;
+  if (num === 355 && den === 113) {
+    document.getElementById('tryHint').style.display = 'none';
+    document.cookie = "355113=true; max-age=" + (60*60*24*365) + "; path=/";
+  }
+}
+
+// Favicon canvas and click counting logic
+const faviconCanvas = document.getElementById('faviconPreview');
+const ctx = faviconCanvas.getContext('2d');
+const faviconSize = 64;
+let faviconImg = new Image();
+
+// Load logo base64 from logo.html and draw circular favicon & preview
+fetch('logo.html').then(res => res.text()).then(base64 => {
+  faviconImg.onload = () => {
+    ctx.clearRect(0, 0, faviconSize, faviconSize);
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(faviconSize/2, faviconSize/2, faviconSize/2, 0, 2 * Math.PI);
+    ctx.closePath();
+    ctx.clip();
+    ctx.drawImage(faviconImg, 0, 0, faviconSize, faviconSize);
+    ctx.restore();
+  };
+  faviconImg.src = 'data:image/png;base64,' + base64.trim();
+}).catch(console.error);
+
+// Track clicks on favicon
+faviconCanvas.addEventListener('click', () => {
+  clickCount++;
+  clearTimeout(clickTimeout);
+  clickTimeout = setTimeout(() => { clickCount = 0; }, 3000);
+});
+
+const keysPressed = {};
+let comboTriggered = false;
+
+document.addEventListener('keydown', (event) => {
+  const key = event.key.toLowerCase();
+  keysPressed[key] = true;
+
+  if (key === 'd') {
+    if (clickCount >= 5 && !comboTriggered) {
+      comboTriggered = true;
+      // Set cookies for hiding hint and triggering redirect on next load
+      document.cookie = "355113=true; max-age=" + (60*60*24*365) + "; path=/";
+      document.cookie = "isdev=1; max-age=" + (60*60*24*365) + "; path=/";
+      alert("Cookies set! On next visit, you will be redirected.");
+      clickCount = 0;
+      return;
+    }
+    if (!comboTriggered) {
+      comboTriggered = true;
+      window.location.href = redirectUrl; // immediate redirect on D key alone
+    }
+  }
+});
+
+document.addEventListener('keyup', (event) => {
+  const key = event.key.toLowerCase();
+  keysPressed[key] = false;
+  if (key === 'd') comboTriggered = false;
+});
+
+// Help button redirect
+document.getElementById('helpButton').addEventListener('click', () => {
+  window.location.href = '/funpi/help';
+});
+</script>
+
 </body>
 </html>
