@@ -41,9 +41,9 @@
       position: fixed;
       top: 50%;
       left: 50%;
-      font-size: 20em;
       font-family: 'Linux Libertine', serif !important;
       font-weight: bold;
+      font-size: 20em;
       background: linear-gradient(90deg, #c0c0c0, #3b82f6, #6b21a8);
       -webkit-background-clip: text !important;
       background-clip: text !important;
@@ -61,21 +61,15 @@
     }
     .pi-symbol {
       font-family: 'Linux Libertine', serif !important;
-      font-size: inherit;
+      font-size: 1em;
       line-height: inherit;
       vertical-align: baseline;
     }
-    #helpButton {
+    #helpButton, #logoButton {
       position: fixed;
-      bottom: 20px;
-      right: 20px;
       width: 50px;
       height: 50px;
       border-radius: 50%;
-      background-color: #6c757d;
-      color: white;
-      font-size: 1.5em;
-      font-weight: bold;
       border: none;
       cursor: pointer;
       box-shadow: 0 2px 5px rgba(0,0,0,0.2);
@@ -85,13 +79,36 @@
       z-index: 1000;
       transition: background-color 0.2s ease;
     }
+    #helpButton {
+      bottom: 20px;
+      right: 20px;
+      background-color: #6c757d;
+      color: white;
+      font-size: 1.5em;
+      font-weight: bold;
+    }
     #helpButton:hover {
       background-color: #5a6268;
+    }
+    #logoButton {
+      bottom: 20px;
+      left: 20px;
+      background-color: transparent;
+      padding: 0;
+      overflow: hidden;
+    }
+    #logoButton img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      pointer-events: none;
+      user-select: none;
     }
     #tryHint {
       font-style: italic;
       color: #555;
       user-select: none;
+      margin-top: 0;
     }
   </style>
 </head>
@@ -118,13 +135,35 @@
   <button onclick="playPiPiano()">Play π</button>
 
   <div id="piSymbol">π</div>
-  <button id="helpButton" aria-label="Help" title="Help" onclick="window.location.href='/funpi/help'">?</button>
+
+  <button id="helpButton" aria-label="Help" title="Help" onclick="window.location.href='/help'">?</button>
+  <button id="logoButton" aria-label="π Logo" title="π Logo"></button>
 
 <script>
 let pi = "";
 let playContext = null;
 let playTimeouts = [];
 
+// Helper for cookies
+function setCookie(name, value, days) {
+  const d = new Date();
+  d.setTime(d.getTime() + (days*24*60*60*1000));
+  const expires = "expires="+d.toUTCString();
+  document.cookie = name + "=" + value + ";" + expires + ";path=/";
+}
+
+function getCookie(name) {
+  const cname = name + "=";
+  const decodedCookie = decodeURIComponent(document.cookie);
+  const ca = decodedCookie.split(';');
+  for(let c of ca) {
+    c = c.trim();
+    if (c.indexOf(cname) === 0) return c.substring(cname.length, c.length);
+  }
+  return "";
+}
+
+// Load pi digits from pi.html
 document.addEventListener('DOMContentLoaded', () => {
   fetch("pi.html")
     .then(res => res.text())
@@ -136,6 +175,26 @@ document.addEventListener('DOMContentLoaded', () => {
     .catch(err => {
       console.error("Couldn't load pi.html:", err);
     });
+
+  // Load logo image for bottom-left button & set favicon
+  fetch('logo.html').then(res => res.text()).then(base64 => {
+    const logoBtn = document.getElementById('logoButton');
+    const img = document.createElement('img');
+    img.src = 'data:image/png;base64,' + base64.trim();
+    logoBtn.appendChild(img);
+
+    // Favicon
+    const favicon = document.createElement('link');
+    favicon.rel = 'icon';
+    favicon.type = 'image/png';
+    favicon.href = img.src;
+    document.head.appendChild(favicon);
+  });
+
+  // Hide "Try 355/113!" hint if cookie exists
+  if (getCookie('tried355113') === 'true') {
+    document.getElementById('tryHint').style.display = 'none';
+  }
 });
 
 function showPi() {
@@ -192,8 +251,14 @@ function checkPi() {
   }
   const approx = num / den;
   result.textContent = `Your approximation: ${approx}`;
-  document.getElementById('tryHint').style.display = 'none';
-  document.cookie = "tried355113=true; max-age=" + (60*60*24*365);
+  
+  // If user inputs 355/113 exactly, set cookie and hide hint
+  if(num === 355 && den === 113 && getCookie('tried355113') !== 'true') {
+    setCookie('tried355113', 'true', 365);
+    const hint = document.getElementById('tryHint');
+    hint.style.display = 'none';
+  }
+
   const error = Math.abs(approx - Math.PI);
   if (error < 0.000001) {
     const gradient = gradients[Math.floor(Math.random() * gradients.length)];
