@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-10P71TWFVE"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-10P71TWFVE"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-10P71TWFVE');
+  </script>
 
-  gtag('config', 'G-10P71TWFVE');
-</script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>π Playground</title>
@@ -27,6 +27,7 @@
       padding: 0.5em;
       margin: 0.5em;
     }
+    h1, h2, p, input, button, #result, #yourPi, #piSymbol, #overlay {}
     #result, #yourPi {
       font-family: monospace;
       font-size: 1.2em;
@@ -41,9 +42,9 @@
       position: fixed;
       top: 50%;
       left: 50%;
+      font-size: 20em;
       font-family: 'Linux Libertine', serif !important;
       font-weight: bold;
-      font-size: 20em;
       background: linear-gradient(90deg, #c0c0c0, #3b82f6, #6b21a8);
       -webkit-background-clip: text !important;
       background-clip: text !important;
@@ -61,15 +62,20 @@
     }
     .pi-symbol {
       font-family: 'Linux Libertine', serif !important;
-      font-size: 1em;
+      font-size: inherit;
       line-height: inherit;
       vertical-align: baseline;
     }
     #helpButton, #logoButton {
       position: fixed;
+      bottom: 20px;
       width: 50px;
       height: 50px;
       border-radius: 50%;
+      background-color: #6c757d;
+      color: white;
+      font-size: 1.5em;
+      font-weight: bold;
       border: none;
       cursor: pointer;
       box-shadow: 0 2px 5px rgba(0,0,0,0.2);
@@ -80,41 +86,98 @@
       transition: background-color 0.2s ease;
     }
     #helpButton {
-      bottom: 20px;
       right: 20px;
-      background-color: #6c757d;
-      color: white;
-      font-size: 1.5em;
-      font-weight: bold;
     }
     #helpButton:hover {
       background-color: #5a6268;
     }
     #logoButton {
-      bottom: 20px;
       left: 20px;
+      font-size: 0; /* hide text */
       background-color: transparent;
-      padding: 0;
-      overflow: hidden;
+      box-shadow: none;
+      pointer-events: auto;
     }
     #logoButton img {
       width: 40px;
       height: 40px;
       border-radius: 50%;
       pointer-events: none;
-      user-select: none;
+    }
+    #logoButton:hover {
+      background-color: transparent;
+    }
+    #overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.7);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1001;
+    }
+    #helpContent {
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      max-width: 90vw;
+      max-height: 90vh;
+      overflow-y: auto;
+      position: relative;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      text-align: left;
+    }
+    #closeHelpButton {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: none;
+      border: none;
+      font-size: 1.5em;
+      cursor: pointer;
+      color: #333;
+      padding: 5px;
+      border-radius: 4px;
+      transition: background-color 0.2s ease;
+    }
+    #closeHelpButton:hover {
+      color: #000;
+      background-color: #f0f0f0;
+    }
+    #helpText img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin: 15px auto;
+      border-radius: 5px;
+    }
+    #faviconPreview {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      box-shadow: 0 0 5px rgba(0,0,0,0.3);
+      z-index: 1000;
+      pointer-events: none;
+      background: transparent;
+      display: none;
     }
     #tryHint {
       font-style: italic;
       color: #555;
       user-select: none;
-      margin-top: 0;
     }
   </style>
 </head>
 <body>
   <h1>π Playground</h1>
 
+  <p id="tryHint">Try 355/113!</p>
   <p>How many digits of π would you like to see?</p>
   <input type="number" id="digitInput" min="1" max="1000000" value="100" />
   <button onclick="showPi()">Show π</button>
@@ -127,75 +190,80 @@
   <button onclick="checkPi()">Check</button>
   <div id="yourPi"></div>
 
-  <p id="tryHint">Try 355/113!</p>
-
   <h2>Play π on Piano</h2>
   <label>BPM: <input type="number" id="bpmInput" value="120" min="30" max="300" /></label>
   <label>Seconds: <input type="number" id="durationInput" value="10" min="1" max="120" /></label>
   <button onclick="playPiPiano()">Play π</button>
 
   <div id="piSymbol">π</div>
+  <button id="helpButton" aria-label="Help" title="Help">?</button>
+  <button id="logoButton" aria-label="Logo" title="Logo"><img src="logo.html" alt="π logo" /></button>
 
-  <button id="helpButton" aria-label="Help" title="Help" onclick="window.location.href='/help'">?</button>
-  <button id="logoButton" aria-label="π Logo" title="π Logo"></button>
+  <div id="overlay">
+    <div id="helpContent">
+      <button id="closeHelpButton">X</button>
+      <div id="helpText"></div>
+    </div>
+  </div>
 
 <script>
 let pi = "";
 let playContext = null;
 let playTimeouts = [];
+let currentNoteIndex = 0;
 
-// Helper for cookies
+const digitToNote = {
+  '0': { freq: 830.61, name: "G#5 / Ab5" },
+  '1': { freq: 440.00, name: "A4" },
+  '2': { freq: 466.16, name: "A#4 / Bb4" },
+  '3': { freq: 493.88, name: "B4" },
+  '4': { freq: 523.25, name: "C5" },
+  '5': { freq: 587.33, name: "D5" },
+  '6': { freq: 659.25, name: "E5" },
+  '7': { freq: 698.46, name: "F5" },
+  '8': { freq: 932.33, name: "A#5 / Bb5" },
+  '9': { freq: 1046.50, name: "C6" }
+};
+
 function setCookie(name, value, days) {
-  const d = new Date();
-  d.setTime(d.getTime() + (days*24*60*60*1000));
-  const expires = "expires="+d.toUTCString();
-  document.cookie = name + "=" + value + ";" + expires + ";path=/";
+  const expires = new Date(Date.now() + days*24*60*60*1000).toUTCString();
+  document.cookie = `${name}=${value}; expires=${expires}; path=/`;
 }
 
 function getCookie(name) {
-  const cname = name + "=";
-  const decodedCookie = decodeURIComponent(document.cookie);
-  const ca = decodedCookie.split(';');
-  for(let c of ca) {
-    c = c.trim();
-    if (c.indexOf(cname) === 0) return c.substring(cname.length, c.length);
+  const cookies = document.cookie.split(';');
+  for (let c of cookies) {
+    const [key, val] = c.trim().split('=');
+    if (key === name) return val;
   }
-  return "";
+  return null;
 }
 
-// Load pi digits from pi.html
-document.addEventListener('DOMContentLoaded', () => {
-  fetch("pi.html")
-    .then(res => res.text())
-    .then(text => {
-      pi = text.replace(/[^0-9.]/g, '');
-      if (!pi.startsWith("3.")) pi = "3." + pi;
-      console.log("π digits loaded:", pi.length);
-    })
-    .catch(err => {
-      console.error("Couldn't load pi.html:", err);
-    });
-
-  // Load logo image for bottom-left button & set favicon
-  fetch('logo.html').then(res => res.text()).then(base64 => {
-    const logoBtn = document.getElementById('logoButton');
-    const img = document.createElement('img');
-    img.src = 'data:image/png;base64,' + base64.trim();
-    logoBtn.appendChild(img);
-
-    // Favicon
-    const favicon = document.createElement('link');
-    favicon.rel = 'icon';
-    favicon.type = 'image/png';
-    favicon.href = img.src;
-    document.head.appendChild(favicon);
-  });
-
-  // Hide "Try 355/113!" hint if cookie exists
-  if (getCookie('tried355113') === 'true') {
-    document.getElementById('tryHint').style.display = 'none';
+function wrapPiChars(node) {
+  if (node.nodeType === Node.TEXT_NODE) {
+    const text = node.textContent;
+    if (text.includes('π')) {
+      const parent = node.parentNode;
+      const parts = text.split('π');
+      parts.forEach((part, i) => {
+        if (part) parent.insertBefore(document.createTextNode(part), node);
+        if (i < parts.length - 1) {
+          const span = document.createElement('span');
+          span.className = 'pi-symbol';
+          span.textContent = 'π';
+          parent.insertBefore(span, node);
+        }
+      });
+      parent.removeChild(node);
+    }
+  } else if (
+    node.nodeType === Node.ELEMENT_NODE &&
+    node.tagName !== 'SCRIPT' &&
+    node.tagName !== 'STYLE'
+  ) {
+    Array.from(node.childNodes).forEach(wrapPiChars);
   }
-});
+}
 
 function showPi() {
   const n = parseInt(document.getElementById("digitInput").value, 10);
@@ -227,19 +295,6 @@ function copyPi() {
   document.body.removeChild(tempInput);
 }
 
-const gradients = [
-  "linear-gradient(0deg, #a1c4fd 0%, #c2e9fb 100%)",
-  "linear-gradient(0deg, #fbc7a4 0%, #fe938c 50%, #b45f06 100%)",
-  "linear-gradient(0deg, #a8e063 0%, #56ab2f 100%)",
-  "linear-gradient(0deg, #5f2c82 0%, #49a09d 100%)",
-  "linear-gradient(0deg, #f7971e 0%, #ffd200 100%)",
-  "linear-gradient(0deg, #c0c0c0, #3b82f6, #6b21a8)",
-  "linear-gradient(0deg, #89f7fe 0%, #66a6ff 100%)",
-  "linear-gradient(0deg, #ee9ca7 0%, #ffdde1 100%)",
-  "linear-gradient(0deg, #43cea2 0%, #185a9d 100%)",
-  "linear-gradient(0deg, #f7971e 0%, #ffd200 100%)"
-];
-
 function checkPi() {
   const num = parseFloat(document.getElementById("numInput").value);
   const den = parseFloat(document.getElementById("denInput").value);
@@ -251,14 +306,10 @@ function checkPi() {
   }
   const approx = num / den;
   result.textContent = `Your approximation: ${approx}`;
-  
-  // If user inputs 355/113 exactly, set cookie and hide hint
-  if(num === 355 && den === 113 && getCookie('tried355113') !== 'true') {
+  if (num === 355 && den === 113 && !getCookie('tried355113')) {
     setCookie('tried355113', 'true', 365);
-    const hint = document.getElementById('tryHint');
-    hint.style.display = 'none';
+    document.getElementById('tryHint').style.display = 'none';
   }
-
   const error = Math.abs(approx - Math.PI);
   if (error < 0.000001) {
     const gradient = gradients[Math.floor(Math.random() * gradients.length)];
@@ -272,18 +323,18 @@ function checkPi() {
   }
 }
 
-const digitToNote = {
-  '0': { freq: 830.61, name: "G#5 / Ab5" },
-  '1': { freq: 440.00, name: "A4" },
-  '2': { freq: 466.16, name: "A#4 / Bb4" },
-  '3': { freq: 493.88, name: "B4" },
-  '4': { freq: 523.25, name: "C5" },
-  '5': { freq: 587.33, name: "D5" },
-  '6': { freq: 659.25, name: "E5" },
-  '7': { freq: 698.46, name: "F5" },
-  '8': { freq: 932.33, name: "A#5 / Bb5" },
-  '9': { freq: 1046.50, name: "C6" }
-};
+const gradients = [
+  "linear-gradient(0deg, #a1c4fd 0%, #c2e9fb 100%)",
+  "linear-gradient(0deg, #fbc7a4 0%, #fe938c 50%, #b45f06 100%)",
+  "linear-gradient(0deg, #a8e063 0%, #56ab2f 100%)",
+  "linear-gradient(0deg, #5f2c82 0%, #49a09d 100%)",
+  "linear-gradient(0deg, #f7971e 0%, #ffd200 100%)",
+  "linear-gradient(0deg, #c0c0c0, #3b82f6, #6b21a8)",
+  "linear-gradient(0deg, #89f7fe 0%, #66a6ff 100%)",
+  "linear-gradient(0deg, #ee9ca7 0%, #ffdde1 100%)",
+  "linear-gradient(0deg, #43cea2 0%, #185a9d 100%)",
+  "linear-gradient(0deg, #f7971e 0%, #ffd200 100%)"
+];
 
 function playTone(ctx, frequency, startTime, duration) {
   const osc = ctx.createOscillator();
@@ -319,15 +370,119 @@ function playPiPiano() {
   playContext = new AudioContext();
   const noteDuration = 60 / bpm;
   let currentTime = playContext.currentTime + 0.1;
-  const maxNotes = Math.floor((seconds * bpm) / 60);
-  for (let i = 0; i < maxNotes && i < pi.length; i++) {
+  const maxNotes = Math.floor((seconds * 60) / bpm);
+  for (let i = 0, count = 0; i < pi.length && count < maxNotes; i++) {
     const digit = pi[i];
     if (digitToNote[digit]) {
       playTone(playContext, digitToNote[digit].freq, currentTime, noteDuration * 0.9);
+      currentTime += noteDuration;
+      count++;
     }
-    currentTime += noteDuration;
   }
 }
+
+// Load pi digits from pi.html
+function loadPi() {
+  return fetch("pi.html")
+    .then(res => res.text())
+    .then(text => {
+      pi = text.replace(/[^0-9.]/g, '');
+      if (!pi.startsWith("3.")) pi = "3." + pi;
+      console.log("π digits loaded:", pi.length);
+    })
+    .catch(err => {
+      console.error("Couldn't load pi.html:", err);
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  wrapPiChars(document.body);
+  loadPi().then(() => {
+    // Hide "Try 355/113!" if cookie exists
+    if (getCookie('tried355113')) {
+      document.getElementById('tryHint').style.display = 'none';
+    }
+  });
+
+  const helpButton = document.getElementById('helpButton');
+  const logoButton = document.getElementById('logoButton');
+  const overlay = document.getElementById('overlay');
+  const helpContentDiv = document.getElementById('helpText');
+  const closeHelpButton = document.getElementById('closeHelpButton');
+
+  function isMobile() {
+    const ua = navigator.userAgent || navigator.vendor || window.opera;
+    const isDesktopOS = /Windows|Macintosh|Linux|X11/.test(ua);
+    const isMobileDevice = /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/.test(ua);
+    if (isDesktopOS && !/Android|iPhone|iPad/.test(ua)) return false;
+    return isMobileDevice;
+  }
+
+  async function loadHelpContent() {
+    let helpFile = isMobile() ? 'helpmob.html' : 'helpweb.html';
+    try {
+      const response = await fetch(helpFile);
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      let text = await response.text();
+      helpContentDiv.innerHTML = text;
+    } catch(e) {
+      helpContentDiv.innerHTML = `<p>Error loading help content. Please ensure '${helpFile}' exists.</p>`;
+      console.error("Failed to load help content:", e);
+    }
+  }
+
+  helpButton.addEventListener('click', () => {
+  window.location.href = '/funpi/help.html';
+});
+
+
+  closeHelpButton.addEventListener('click', () => {
+    overlay.style.display = 'none';
+    document.body.style.overflow = '';
+    document.documentElement.style.pointerEvents = '';
+  });
+
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) {
+      overlay.style.display = 'none';
+      document.body.style.overflow = '';
+      document.documentElement.style.pointerEvents = '';
+    }
+  });
+
+  logoButton.addEventListener('click', () => {
+    window.open('logo.html', '_blank');
+  });
+
+  // Secret 5x D key press redirect
+  let dPressCount = 0;
+  let dPressTimeout = null;
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key.toLowerCase() === 'd') {
+      dPressCount++;
+      clearTimeout(dPressTimeout);
+      dPressTimeout = setTimeout(() => {
+        dPressCount = 0;
+      }, 1500);
+
+      if (dPressCount === 5) {
+        localStorage.setItem('funPiRedirect', 'true');
+        dPressCount = 0;
+        alert('Secret mode activated! Open π Playground again to be redirected.');
+      }
+    }
+  });
+
+  window.addEventListener('load', () => {
+    if (localStorage.getItem('funPiRedirect') === 'true') {
+      localStorage.removeItem('funPiRedirect');
+      window.location.href = '/funpi/tan(1.26262725568)';
+    }
+  });
+});
 </script>
+
+<link rel="icon" href="logo.html" type="image/svg+xml" />
 </body>
 </html>
