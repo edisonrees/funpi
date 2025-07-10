@@ -19,6 +19,9 @@
       font-family: Arial, sans-serif;
       text-align: center;
       padding: 2em;
+      position: relative;
+      min-height: 100vh;
+      margin: 0;
     }
     input, button {
       font-size: 1em;
@@ -51,7 +54,7 @@
       pointer-events: none;
       transform: translate(-50%, -50%) scale(0) rotate(0deg);
       opacity: 0;
-      transition: transform 0.4s ease-in-out, opacity 0.4s ease-in-out;
+      transition: transform 0.6s ease-in-out, opacity 0.6s ease-in-out;
       display: inline-block;
       will-change: transform, opacity;
       backface-visibility: hidden;
@@ -103,6 +106,14 @@
       color: #555;
       user-select: none;
     }
+    footer {
+      position: absolute;
+      bottom: 5px;
+      width: 100%;
+      font-size: 0.9em;
+      color: #888;
+      user-select: none;
+    }
   </style>
 </head>
 <body>
@@ -129,6 +140,8 @@
   <div id="piSymbol">π</div>
   <button id="helpButton" aria-label="Help" title="Help">?</button>
   <canvas id="faviconPreview" width="64" height="64"></canvas>
+  
+  <footer>Version 1.0.1</footer>
 
 <script>
 let pi = "";
@@ -224,17 +237,33 @@ function animatePiSymbol() {
   el.style.opacity = "1";
   el.style.transform = "translate(-50%, -50%) scale(0) rotate(0deg)";
 
+  // Zoom in
   requestAnimationFrame(() => {
     el.style.transition = "transform 600ms ease-in-out, opacity 600ms ease-in-out";
     el.style.transform = "translate(-50%, -50%) scale(2) rotate(0deg)";
   });
 
-  // Hold peak size for 700ms, then fade out over 400ms
+  // Hold peak and do rotation swing for 700ms
   setTimeout(() => {
-    el.style.transition = "transform 400ms ease-in-out, opacity 400ms ease-in-out";
-    el.style.transform = "translate(-50%, -50%) scale(0) rotate(0deg)";
-    el.style.opacity = "0";
-  }, 1300);
+    let angles = [1,2,3,4,5,6,7,8,9,10,9,8,7,6,5,4,3,2,1];
+    let i = 0;
+    const swingDuration = 700; // ms
+    const intervalMs = swingDuration / angles.length;
+    
+    const swingInterval = setInterval(() => {
+      if(i >= angles.length) {
+        clearInterval(swingInterval);
+        // Fade out after swing ends
+        el.style.transition = "transform 400ms ease-in-out, opacity 400ms ease-in-out";
+        el.style.transform = "translate(-50%, -50%) scale(0) rotate(0deg)";
+        el.style.opacity = "0";
+        return;
+      }
+      el.style.transition = "transform 100ms ease-in-out";
+      el.style.transform = `translate(-50%, -50%) scale(2) rotate(${angles[i]}deg)`;
+      i++;
+    }, intervalMs);
+  }, 600);
 }
 
 function showPi() {
