@@ -103,7 +103,7 @@
     #helpButton:hover {
       background-color: #5a6268;
     }
-    #faviconPreview {
+    #logoImage {
       position: fixed;
       bottom: 20px;
       left: 20px;
@@ -112,8 +112,10 @@
       border-radius: 50%;
       box-shadow: 0 0 5px rgba(0,0,0,0.3);
       z-index: 1000;
-      pointer-events: none;
+      pointer-events: auto;
       background: transparent;
+      object-fit: contain;
+      background-color: transparent;
     }
     #tryHint {
       font-style: italic;
@@ -152,7 +154,7 @@
     body.dark-mode #helpButton:hover {
       background-color: #666;
     }
-    body.dark-mode #faviconPreview {
+    body.dark-mode #logoImage {
       box-shadow: 0 0 5px rgba(255,255,255,0.3);
     }
     body.dark-mode #piSymbol {
@@ -188,7 +190,8 @@
 
   <div id="piSymbol">π</div>
   <button id="helpButton" aria-label="Help" title="Help">?</button>
-  <canvas id="faviconPreview" width="64" height="64"></canvas>
+  <img id="logoImage" alt="The r/thepi's logo!" src="" />
+  <canvas id="faviconPreview" width="64" height="64" style="display:none;"></canvas>
   <button id="darkModeToggle" aria-label="Toggle dark mode" title="Toggle dark mode" 
           style="position: fixed; bottom: 20px; left: 80px; width: 50px; height: 50px; border-radius: 50%; 
                  background-color: #6c757d; color: white; font-size: 1.3em; font-weight: bold; border: none; 
@@ -436,31 +439,56 @@
     window.location.href = '/funpi/help';
   });
 
-  // ========== Favicon rendering ==========
-  (function() {
-    function setFaviconCircle() {
-      const canvas = document.getElementById("faviconPreview");
-      const ctx = canvas.getContext("2d");
+  // ========== Logo and favicon loading ==========
+  async function loadLogoAndFavicon() {
+    try {
+      const resp = await fetch('logo.html');
+      if (!resp.ok) throw new Error('Failed to fetch logo.html');
+      const htmlText = await resp.text();
+      // Extract base64 img src from logo.html, assuming it has <img src="data:image/png;base64,...">
+      const imgSrcMatch = htmlText.match(/<img[^>]+src="([^"]+)"/i);
+      if (!imgSrcMatch) throw new Error('No image found in logo.html');
+      const base64src = imgSrcMatch[1];
+      // Set logo image src
+      const logoImg = document.getElementById('logoImage');
+      logoImg.src = base64src;
+
+      // Create favicon canvas masked as circle
+      const canvas = document.getElementById('faviconPreview');
+      const ctx = canvas.getContext('2d');
       const size = canvas.width;
+      const img = new Image();
+      img.onload = () => {
+        // Clear
+        ctx.clearRect(0, 0, size, size);
+        // Draw circle clip
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(size/2, size/2, size/2, 0, Math.PI*2);
+        ctx.closePath();
+        ctx.clip();
+        // Draw image centered & scaled to canvas
+        let scale = Math.min(size/img.width, size/img.height);
+        let w = img.width * scale;
+        let h = img.height * scale;
+        ctx.drawImage(img, (size - w)/2, (size - h)/2, w, h);
+        ctx.restore();
 
-      // Clear
-      ctx.clearRect(0, 0, size, size);
-
-      // Circle background
-      ctx.fillStyle = "rgba(120, 0, 180, 0.5)";
-      ctx.beginPath();
-      ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Draw π symbol in center
-      ctx.fillStyle = "white";
-      ctx.font = "48px 'Linux Libertine', serif";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText("π", size / 2, size / 2);
+        // Set favicon link element
+        let faviconURL = canvas.toDataURL('image/png');
+        let link = document.querySelector("link[rel~='icon']");
+        if (!link) {
+          link = document.createElement('link');
+          link.rel = 'icon';
+          document.head.appendChild(link);
+        }
+        link.href = faviconURL;
+      };
+      img.src = base64src;
+    } catch(e) {
+      console.error(e);
     }
-    setFaviconCircle();
-  })();
+  }
 
   // On DOM ready
   window.addEventListener('load', () => {
@@ -475,8 +503,11 @@
     // Update version info from GitHub
     updateVersion();
 
-    // Animate π symbol on load
-    animatePiSymbol();
+    // Load logo and favicon
+    loadLogoAndFavicon();
+
+    // Disable initial pi animation on page load for now
+    // animatePiSymbol();  -- removed from here; call manually instead if needed
   });
 </script>
 </body>
