@@ -1,5 +1,5 @@
 {
   "showunveil": "true",
-  "unveiltext": "With 1.1.0 Newton, new functions such as cookie storage, smart cropping, and detailed functionality is integrated directly into the user interface. 1.1.0 newton is the biggest update we have, with an all new Dark Mode. Removing the jiggle on the zoom out, and better developer functions so that integration is easier as ever. We have also developed a mode of injecting logic wirelessly, without altering the script. in unveil.json, the software will call to that to get the logic, and use dynamic cookie scaling to interpret and prevent repeats of unintended software.",
-  "unveilid": "soft_1_1_0_newton"
+  "unveiltext": "This update includes many MANY bug fixes!",
+  "unveilid": "bf1"
 }
