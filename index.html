@@ -474,5 +474,50 @@
     fetchPi();
   });
 </script>
+<div id="unveilBanner" style="display:none; position:fixed; bottom:0; left:0; width:100%; background:#3b82f6; color:white; padding:1em; font-size:1.1em; z-index:10000; text-align:center;">
+  <span id="unveilMessage"></span>
+  <button id="dismissUnveil" style="margin-left:1em; background:#1e40af; color:white; border:none; padding:0.5em 1em; cursor:pointer; border-radius:4px;">Dismiss</button>
+</div>
+
+<script>
+(async () => {
+  const unveilURL = "https://raw.githubusercontent.com/edisonrees/funpi/refs/heads/main/unveil.json";
+
+  function setCookie(name, value, days = 365) {
+    const expires = new Date(Date.now() + days * 864e5).toUTCString();
+    document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/`;
+  }
+
+  function getCookie(name) {
+    return document.cookie.split("; ").reduce((r, v) => {
+      const parts = v.split("=");
+      return parts[0] === name ? decodeURIComponent(parts[1]) : r;
+    }, "");
+  }
+
+  try {
+    const res = await fetch(unveilURL);
+    if (!res.ok) throw new Error("Failed to fetch unveil.json");
+    const unveil = await res.json();
+
+    const { showunveil, unveiltext, unveilid } = unveil;
+    const seenId = getCookie("unveilid");
+
+    if (showunveil === "true" && unveilid && unveilid !== seenId) {
+      const banner = document.getElementById("unveilBanner");
+      document.getElementById("unveilMessage").textContent = unveiltext || "A new update is available!";
+      banner.style.display = "block";
+
+      document.getElementById("dismissUnveil").onclick = () => {
+        setCookie("unveilid", unveilid);
+        banner.style.display = "none";
+      };
+    }
+  } catch (err) {
+    console.warn("Unveil check failed:", err);
+  }
+})();
+</script>
+
 </body>
 </html>
