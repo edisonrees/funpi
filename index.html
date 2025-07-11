@@ -417,6 +417,7 @@
       return;
     }
     resultDiv.textContent = `π to ${n} digits:\n` + pi.slice(0, n + 2);
+
   }
 
   function copyPi() {
@@ -436,21 +437,35 @@
   }
 
   function checkPi() {
-    const num = parseFloat(document.getElementById("numInput").value);
-    const den = parseFloat(document.getElementById("denInput").value);
-    const result = document.getElementById("yourPi");
-    if (isNaN(num) || isNaN(den) || den === 0) {
-      result.textContent = "Enter valid numerator and denominator";
-      return;
-    }
-    const approx = num/den;
-    const diff = Math.abs(Math.PI - approx);
-    result.textContent = `Your fraction is approximately: ${approx}\nDifference from π: ${diff}`;
-    if(num === 355 && den === 113) {
-      setCookie('tried355113', 'true', 365);
-      document.getElementById('tryHint').style.display = 'none';
-    }
+  const num = parseFloat(document.getElementById("numInput").value);
+  const den = parseFloat(document.getElementById("denInput").value);
+  const result = document.getElementById("yourPi");
+  if (isNaN(num) || isNaN(den) || den === 0) {
+    result.textContent = "Enter valid numerator and denominator";
+    return;
   }
+  const approx = num / den;
+  const diff = Math.abs(Math.PI - approx);
+
+  // Format difference: if it would show as exponential, convert to fixed decimal with enough digits
+  let diffStr = diff.toString();
+  if (diffStr.includes('e')) {
+    // Show with 12 decimal places to avoid exponential notation
+    diffStr = diff.toFixed(20).replace(/0+$/, '').replace(/\.$/, '');
+  }
+
+  result.textContent = `Your fraction is approximately: ${approx}\nDifference from π: ${diffStr}`;
+
+  if (diff < 0.00001) {
+    animatePiSymbol();
+  }
+
+  if (num === 355 && den === 113) {
+    setCookie('tried355113', 'true', 365);
+    document.getElementById('tryHint').style.display = 'none';
+  }
+}
+
 
   function playPiPiano() {
     if (!pi) {
