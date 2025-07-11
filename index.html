@@ -161,8 +161,7 @@
       color: transparent !important;
       text-shadow: 0 0 4px rgba(0,0,0,0.7);
     }
-
-    /* Unveil popup styles injected by JS */
+  /* Unveil popup styles injected by JS */
   </style>
 </head>
 <body>
@@ -253,6 +252,69 @@
       setCookie('darkMode', '0', 365);
     }
   }
+
+  // ----------------------------
+  // GitHub commit version fetch and update footer
+  // ----------------------------
+
+  const versionNames = {
+    "1.0.0": "Tangent",
+    "1.1.0": "Newton",
+    "1.2.0": "Circumference",
+    "1.3.0": "Einstein",
+    "1.4.0": "Dynamic",
+    "1.5.0": "Pi",
+    "1.6.0": "Cosine",
+    "1.7.0": "Radian",
+    "1.8.0": "Circle",
+    "1.9.0": "Prowler",
+    "2.0.0": "Alcatraz"
+  };
+
+  async function updateVersionFromGitHub() {
+    try {
+      const response = await fetch("https://api.github.com/repos/edisonrees/funpi/commits?per_page=100");
+      if (!response.ok) throw new Error("Network response was not ok");
+      const commits = await response.json();
+
+      // Collect unique first 6 chars of commit SHAs
+      const uniqueHashes = new Set();
+      commits.forEach(commit => {
+        if(commit.sha) uniqueHashes.add(commit.sha.substring(0,6));
+      });
+
+      // Count unique commits
+      const count = uniqueHashes.size;
+
+      // Convert count to version number: e.g. count = 12 -> "1.1.2"
+      // Logic: count digits split as Major.Minor.Patch
+      // Major = Math.floor(count/10), Minor = count%10, Patch = 0 (for simplicity)
+      // Or you can do Major = Math.floor(count/10), Minor = count%10, Patch = count%10 again or zero
+      // For simplicity here: major = floor(count/10), minor = count%10, patch=0
+
+      const major = Math.floor(count / 10);
+      const minor = count % 10;
+      const patch = 0;
+      const versionStr = `${major}.${minor}.${patch}`;
+
+      // Find version name or fallback
+      const versionName = versionNames[versionStr] || "Unknown";
+
+      // Update footer text
+      const footer = document.querySelector("footer");
+      footer.textContent = `Version ${versionStr} ${versionName}`;
+    } catch (err) {
+      console.error("Failed to fetch GitHub commits:", err);
+    }
+  }
+
+  // Call it once DOM is loaded
+  window.addEventListener('DOMContentLoaded', updateVersionFromGitHub);
+
+</script>
+</body>
+</html>
+
   // Load saved or system preference on start
   window.addEventListener('DOMContentLoaded', () => {
     const saved = getCookie('darkMode');
@@ -456,7 +518,7 @@
 
   result.textContent = `Your fraction is approximately: ${approx}\nDifference from π: ${diffStr}`;
 
-  if (diff < 0.00001) {
+  if (diff < 0.001) {
     animatePiSymbol();
   }
 
