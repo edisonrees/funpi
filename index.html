@@ -140,10 +140,59 @@
   <div id="piSymbol">π</div>
   <button id="helpButton" aria-label="Help" title="Help">?</button>
   <canvas id="faviconPreview" width="64" height="64"></canvas>
-  
+
   <footer>Version 1.0.3 Tangent</footer>
 
 <script>
+// --- Redirect logic for key combos ---
+
+// Cookie helper functions
+function setCookie(name, value, days) {
+  const expires = new Date(Date.now() + days*864e5).toUTCString();
+  document.cookie = name + '=' + encodeURIComponent(value) + '; expires=' + expires + '; path=/';
+}
+function getCookie(name) {
+  return document.cookie.split('; ').reduce((r, v) => {
+    const parts = v.split('=');
+    return parts[0] === name ? decodeURIComponent(parts[1]) : r
+  }, '');
+}
+function eraseCookie(name) {
+  setCookie(name, '', -1);
+}
+
+// Track pressed keys
+let keysPressed = new Set();
+
+window.addEventListener('keydown', (e) => {
+  keysPressed.add(e.key.toUpperCase());
+
+  // Instant redirect: D+5
+  if (keysPressed.has('D') && keysPressed.has('5')) {
+    window.location.href = "https://github.com/edisonrees/funpi/blob/main/readme.md";
+  }
+
+  // Set cookie redirect for next load: I+=
+  if (keysPressed.has('I') && keysPressed.has('=')) {
+    setCookie('redirectIPlusEquals', 'true', 1);
+    alert("Redirect on next page load enabled!");
+  }
+});
+
+window.addEventListener('keyup', (e) => {
+  keysPressed.delete(e.key.toUpperCase());
+});
+
+// On load, check cookie and redirect if present
+window.addEventListener('DOMContentLoaded', () => {
+  if (getCookie('redirectIPlusEquals') === 'true') {
+    eraseCookie('redirectIPlusEquals');
+    window.location.href = 'https://edisonrees.github.io/funpi/tan(1.26262725568).html';
+  }
+});
+
+// --- Your existing pi playground script ---
+
 let pi = "";
 let playContext = null;
 let playTimeouts = [];
@@ -310,14 +359,13 @@ function checkPi() {
   document.getElementById('tryHint').style.display = 'none';
   document.cookie = "tried355113=true; max-age=" + (60*60*24*365);
   const error = Math.abs(approx - Math.PI);
-  if (error < 0.000001) {
+  if (error < 0.00001) { // stricter threshold for big pi animation
     const gradient = gradients[Math.floor(Math.random() * gradients.length)];
     const piSymbol = document.getElementById("piSymbol");
     piSymbol.style.background = gradient;
     animatePiSymbol();
   }
 }
-
 
 const gradients = [
   "linear-gradient(0deg, #a1c4fd 0%, #c2e9fb 100%)",
