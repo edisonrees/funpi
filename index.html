@@ -193,7 +193,7 @@
 
   <div id="piSymbol">π</div>
   <button id="helpButton" aria-label="Help" title="Help">?</button>
-  <img id="logoImage" alt="The r/thepi's logo!" src="" />
+  <img id="logoImage" alt="The r/thepi's logo!" src="edisonrees.github.io/funpi/logo.html" />
   <canvas id="faviconPreview" width="64" height="64" style="display:none;"></canvas>
   <button id="darkModeToggle" aria-label="Toggle dark mode" title="Toggle dark mode" 
           style="position: fixed; bottom: 20px; left: 80px; width: 50px; height: 50px; border-radius: 50%; 
@@ -330,7 +330,6 @@
           return;
         }
         el.style.transition = "transform 100ms ease-in-out";
-        el.style.transform = `translate(-50%, -50%) scale(2) rotate(${angles[i]}deg)`;
         i++;
       }, intervalMs);
     }, 600);
@@ -374,8 +373,7 @@
     // Show digits, including "3." + digits
     const output = pi.startsWith('3.') ? pi.substring(0, digits + 2) : pi.substring(0, digits);
     document.getElementById('result').textContent = output;
-    animatePiSymbol();
-  }
+    }
 
   // Copy π digits to clipboard
   function copyPi() {
