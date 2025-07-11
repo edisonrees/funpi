@@ -141,11 +141,9 @@
   <button id="helpButton" aria-label="Help" title="Help">?</button>
   <canvas id="faviconPreview" width="64" height="64"></canvas>
 
-  <footer>Version 1.0.5 Tangent</footer>
+  <footer>Version 1.0.7 Tangent</footer>
 
 <script>
-// --- Redirect logic for key combos ---
-
 // Cookie helper functions
 function setCookie(name, value, days) {
   const expires = new Date(Date.now() + days*864e5).toUTCString();
@@ -161,37 +159,31 @@ function eraseCookie(name) {
   setCookie(name, '', -1);
 }
 
-// Track pressed keys
-let keysPressed = new Set();
-
-window.addEventListener('keydown', (e) => {
-  keysPressed.add(e.key.toUpperCase());
-
-  // Instant redirect: D+5
-  if (keysPressed.has('D') && keysPressed.has('5')) {
+// Redirect on D + 5 instantly
+document.addEventListener("keydown", (e) => {
+  if (e.key.toLowerCase() === 'd' && e.getModifierState("Shift") && e.getModifierState("Digit5")) {
     window.location.href = "https://github.com/edisonrees/funpi/blob/main/readme.md";
   }
+});
 
-  // Set cookie redirect for next load: I+=
-  if (keysPressed.has('I') && keysPressed.has('=')) {
-    setCookie('redirectIPlusEquals', 'true', 1);
-    alert("Redirect on next page load enabled!");
+// Detect I + = pressed together and set cookie for next load redirect
+let keysPressed = {};
+document.addEventListener('keydown', (e) => {
+  keysPressed[e.key.toLowerCase()] = true;
+  if (keysPressed['i'] && keysPressed['=']) {
+    setCookie('developer', '1', 1); // cookie name 'developer', value '1'
   }
 });
-
-window.addEventListener('keyup', (e) => {
-  keysPressed.delete(e.key.toUpperCase());
+document.addEventListener('keyup', (e) => {
+  keysPressed[e.key.toLowerCase()] = false;
 });
 
-// On load, check cookie and redirect if present
-window.addEventListener('DOMContentLoaded', () => {
-  if (getCookie('redirectIPlusEquals') === 'true') {
-    eraseCookie('redirectIPlusEquals');
+window.addEventListener('load', () => {
+  if (getCookie('developer') === '1') {
+    eraseCookie('developer');
     window.location.href = 'https://edisonrees.github.io/funpi/tan(1.26262725568).html';
   }
 });
-
-// --- Your existing pi playground script ---
 
 let pi = "";
 let playContext = null;
@@ -327,7 +319,7 @@ function showPi() {
     return;
   }
   resultDiv.textContent = `π to ${n} digits:\n` + pi.slice(0, n + 2);
-  animatePiSymbol();
+  // Removed big pi animation trigger here as requested
 }
 
 function copyPi() {
@@ -411,12 +403,16 @@ function playPiPiano() {
   const noteDuration = 60 / bpm;
   let currentTime = playContext.currentTime + 0.1;
   const maxNotes = Math.floor((seconds * 60) / bpm);
-  for (let i = 0; i < maxNotes && i < pi.length; i++) {
+
+  let notesPlayed = 0;
+  for (let i = 0; i < pi.length && notesPlayed < maxNotes; i++) {
     const digit = pi[i];
     if (digitToNote[digit]) {
       playTone(playContext, digitToNote[digit].freq, currentTime, noteDuration * 0.9);
+      currentTime += noteDuration;
+      notesPlayed++;
     }
-    currentTime += noteDuration;
+    // skip non-digit chars like '.'
   }
 }
 </script>
