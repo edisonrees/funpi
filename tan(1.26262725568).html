@@ -1,17 +1,89 @@
-Heyo developer!
-Check your pants.
-No not literally!
-Check your cookies!
-Do you see that variable?
-It says;
-'developer=1'
-So thanks for making the w-w-w-world wide web a better place!
-You make everyone happy
-Including me!
-So thank you dearly.
-Also because you visited this site, remove the
-tan(1.262blahblah), go to that site and please press D+5, that way
-you can see our documentation.
-Sincerely,
--Edison
-r/thepi
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Developer Message</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f0f0;
+      color: #222;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      justify-content: center;
+      align-items: center;
+      padding: 2em;
+      text-align: center;
+    }
+    main {
+      max-width: 600px;
+      font-size: 1.1em;
+      line-height: 1.5em;
+      white-space: pre-line;
+      margin-bottom: 2em;
+    }
+    button {
+      padding: 0.6em 1.2em;
+      font-size: 1em;
+      border: none;
+      border-radius: 5px;
+      background-color: #3b82f6;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      margin-bottom: 3em;
+    }
+    button:hover {
+      background-color: #2563eb;
+    }
+    footer {
+      position: fixed;
+      bottom: 20px;
+      width: 100%;
+      text-align: center;
+    }
+    footer img {
+      width: 64px;
+      height: 64px;
+      object-fit: contain;
+    }
+  </style>
+</head>
+<body>
+  <main>
+Heyo developer!<br>
+Check your pants.<br>
+No not literally!<br>
+Check your cookies!<br>
+Do you see that variable?<br>
+It says;<br>
+'developer=1'<br>
+So thanks for making the w-w-w-world wide web a better place!<br>
+You make everyone happy<br>
+Including me!<br>
+So thank you dearly.<br><br>
+Sincerely,<br>
+-Edison<br>
+r/thepi<br><br>
+p.s. our documentation can be viewed by pressing D+5 on the homepage!
+  </main>
+
+  <button onclick="window.location.href='/funpi'">Return to Homepage</button>
+
+  <footer>
+    <img id="logo" alt="Logo" />
+  </footer>
+
+  <script>
+    fetch('logo.html')
+      .then(res => res.text())
+      .then(base64 => {
+        const img = document.getElementById('logo');
+        img.src = 'data:image/png;base64,' + base64.trim();
+      });
+  </script>
+</body>
+</html>
