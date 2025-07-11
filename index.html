@@ -183,10 +183,13 @@
   <button onclick="checkPi()">Check</button>
   <div id="yourPi"></div>
 
-  <h2>Play π on Piano</h2>
-  <label>BPM: <input type="number" id="bpmInput" value="120" min="30" max="300" /></label>
-  <label>Seconds: <input type="number" id="durationInput" value="10" min="1" max="120" /></label>
-  <button onclick="playPiPiano()">Play π</button>
+  <!-- Replaced Play π on Piano with Search π Digits -->
+  <section id="searchPiSection" style="margin-top: 2em;">
+    <h2>Search π Digits</h2>
+    <input type="text" id="searchInput" placeholder="Enter digit(s) to find" pattern="\d*" />
+    <button id="searchBtn">Search in π</button>
+    <div id="searchResult" style="margin-top: 1em; font-family: monospace;"></div>
+  </section>
 
   <div id="piSymbol">π</div>
   <button id="helpButton" aria-label="Help" title="Help">?</button>
@@ -408,12 +411,6 @@
     animatePiSymbol();
   }
 
-  // Play π notes on a piano (stub implementation)
-  function playPiPiano() {
-    alert("Play π piano function not implemented yet.");
-    // You can expand this function later to play notes mapped from π digits
-  }
-
   // Wrap π characters in the document body with a span for styling
   function wrapPiChars(node) {
     if (node.nodeType === Node.TEXT_NODE && node.textContent.includes('π')) {
@@ -434,80 +431,49 @@
     }
   }
 
-  // ========== Help button ==========
-  document.getElementById('helpButton').addEventListener('click', () => {
-    window.location.href = '/funpi/help';
-  });
+  // ========== Search π digits functionality ==========
+  function searchPiDigits(query) {
+    if (!query.match(/^\d+$/)) return null;
+    const piOnlyDigits = pi.replace(/\D/g, ''); // Just digits, no decimal points or anything else
+    const firstIndex = piOnlyDigits.indexOf(query);
+    if (firstIndex === -1) return null;
 
-  // ========== Logo and favicon loading ==========
-  async function loadLogoAndFavicon() {
-    try {
-      const resp = await fetch('logo.html');
-      if (!resp.ok) throw new Error('Failed to fetch logo.html');
-      const htmlText = await resp.text();
-      // Extract base64 img src from logo.html, assuming it has <img src="data:image/png;base64,...">
-      const imgSrcMatch = htmlText.match(/<img[^>]+src="([^"]+)"/i);
-      if (!imgSrcMatch) throw new Error('No image found in logo.html');
-      const base64src = imgSrcMatch[1];
-      // Set logo image src
-      const logoImg = document.getElementById('logoImage');
-      logoImg.src = base64src;
-
-      // Create favicon canvas masked as circle
-      const canvas = document.getElementById('faviconPreview');
-      const ctx = canvas.getContext('2d');
-      const size = canvas.width;
-      const img = new Image();
-      img.onload = () => {
-        // Clear
-        ctx.clearRect(0, 0, size, size);
-        // Draw circle clip
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(size/2, size/2, size/2, 0, Math.PI*2);
-        ctx.closePath();
-        ctx.clip();
-        // Draw image centered & scaled to canvas
-        let scale = Math.min(size/img.width, size/img.height);
-        let w = img.width * scale;
-        let h = img.height * scale;
-        ctx.drawImage(img, (size - w)/2, (size - h)/2, w, h);
-        ctx.restore();
-
-        // Set favicon link element
-        let faviconURL = canvas.toDataURL('image/png');
-        let link = document.querySelector("link[rel~='icon']");
-        if (!link) {
-          link = document.createElement('link');
-          link.rel = 'icon';
-          document.head.appendChild(link);
-        }
-        link.href = faviconURL;
-      };
-      img.src = base64src;
-    } catch(e) {
-      console.error(e);
+    let count = 0;
+    let pos = 0;
+    while (true) {
+      pos = piOnlyDigits.indexOf(query, pos);
+      if (pos === -1) break;
+      count++;
+      pos += query.length;
     }
+
+    return { firstIndex, count };
   }
 
-  // On DOM ready
+  document.getElementById('searchBtn').addEventListener('click', () => {
+    const q = document.getElementById('searchInput').value.trim();
+    const res = document.getElementById('searchResult');
+    if (!q.match(/^\d+$/)) {
+      res.textContent = "Please enter digits only.";
+      return;
+    }
+    if (!pi) {
+      res.textContent = "π digits not loaded yet.";
+      return;
+    }
+    const found = searchPiDigits(q);
+    if (found) {
+      res.textContent = `Found "${q}" first at index ${found.firstIndex} (0-based, decimals after decimal point), total occurrences: ${found.count}`;
+    } else {
+      res.textContent = `Digit sequence "${q}" not found in loaded π digits.`;
+    }
+  });
+
+  // ========== Initialization ==========
   window.addEventListener('load', () => {
-    // Load π digits from pi.html
-    fetchPi();
-
-    // Apply dark mode if previously set
-    const darkCookie = getCookie('darkMode');
-    if (darkCookie === '1') applyDarkMode(true);
-    else applyDarkMode(false);
-
-    // Update version info from GitHub
+    applyDarkMode(getCookie('darkMode') === '1');
     updateVersion();
-
-    // Load logo and favicon
-    loadLogoAndFavicon();
-
-    // Disable initial pi animation on page load for now
-    // animatePiSymbol();  -- removed from here; call manually instead if needed
+    fetchPi();
   });
 </script>
 </body>
