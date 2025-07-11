@@ -368,32 +368,36 @@
   }
 
   // Close popup handler
-  document.getElementById('closePopupBtn').onclick = () => {
-    document.getElementById('percentilePopup').style.visibility = 'hidden';
-  };
+document.getElementById('closePopupBtn').onclick = () => {
+  document.getElementById('percentilePopup').style.visibility = 'hidden';
+};
 
-  // Quiz logic
-  function quizCheckAnswer() {
-    const answerInput = document.getElementById('piAnswer');
-    const nameInput = document.getElementById('playerName');
-    const feedbackDiv = document.getElementById('quizFeedback');
-    const userAnswerRaw = answerInput.value.trim();
-    const name = nameInput.value.trim() || "Anonymous";
+// Quiz logic
+function quizCheckAnswer() {
+  const answerInput = document.getElementById('piAnswer');
+  const nameInput = document.getElementById('playerName');
+  const feedbackDiv = document.getElementById('quizFeedback');
+  const userAnswerRaw = answerInput.value.trim();
+  const name = nameInput.value.trim() || "Anonymous";
 
-    if (!userAnswerRaw.match(/^\d+$/)) {
-      feedbackDiv.textContent = "Please enter digits only (0-9).";
-      return;
-    }
-    // Required pi substring to match: "3" + "." + first N decimals from piDigits starting at index 0
-    // piDigits contains digits only (no decimal), first digit is '1' after decimal, so prefix "3." manually
-    // So required: 3.<first currentDecimalCount decimals>
-    let requiredPi = "3." + piDigits.slice(0, currentDecimalCount);
+  // Validate input: digits with exactly one decimal point allowed
+  if (!/^\d+(\.\d+)?$/.test(userAnswerRaw)) {
+    feedbackDiv.textContent = "Please enter digits only (0-9) and exactly one decimal point.";
+    return;
+  }
 
-    // User answer must be exactly the same length
-    if(userAnswerRaw.length !== requiredPi.length) {
-      feedbackDiv.textContent = `You must enter exactly ${requiredPi.length} characters including the decimal point.`;
-      return;
-    }
+  // Required pi substring to match: "3" + "." + first N decimals from piDigits starting at index 0
+  // piDigits contains digits only (no decimal), first digit is '1' after decimal, so prefix "3." manually
+  let requiredPi = "3." + piDigits.slice(0, currentDecimalCount);
+
+  // User answer must be exactly the same length
+  if (userAnswerRaw.length !== requiredPi.length) {
+    feedbackDiv.textContent = `You must enter exactly ${requiredPi.length} characters including the decimal point.`;
+    return;
+  }
+
+  // ... rest of your logic ...
+}
 
     if(userAnswerRaw[1] !== '.') {
       feedbackDiv.textContent = 'Please include the decimal point after the 3 (e.g., 3.14).';
