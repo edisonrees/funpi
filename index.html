@@ -35,6 +35,7 @@
       border: 1px solid #ccc;
       border-radius: 4px;
       transition: background-color 0.3s ease, color 0.3s ease;
+      cursor: pointer;
     }
     input:focus, button:focus {
       outline: 2px solid #3b82f6;
@@ -49,6 +50,7 @@
       margin-right: auto;
       white-space: pre-wrap;
       word-break: break-word;
+      user-select: text;
     }
     #piSymbol {
       position: fixed;
@@ -105,8 +107,8 @@
       position: fixed;
       bottom: 20px;
       left: 20px;
-      width: 40px;
-      height: 40px;
+      width: 64px;
+      height: 64px;
       border-radius: 50%;
       box-shadow: 0 0 5px rgba(0,0,0,0.3);
       z-index: 1000;
@@ -163,47 +165,6 @@
     }
   </style>
 </head>
-<script>
-  (function() {
-    function loadLogoToCanvas() {
-      const canvas = document.getElementById('faviconPreview');
-      if (!canvas) {
-        console.warn('Canvas with id "faviconPreview" not found');
-        return;
-      }
-      const ctx = canvas.getContext('2d');
-
-      fetch('https://edisonrees.github.io/funpi/logo.html')
-        .then(response => {
-          if (!response.ok) throw new Error('Failed to fetch logo.html');
-          return response.text();
-        })
-        .then(htmlText => {
-          const base64Match = htmlText.match(/data:image\/png;base64,[A-Za-z0-9+/=]+/);
-          if (!base64Match) throw new Error('Base64 image not found in logo.html');
-          return base64Match[0];
-        })
-        .then(base64Data => {
-          const img = new Image();
-          img.onload = () => {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-          };
-          img.src = base64Data;
-        })
-        .catch(err => {
-          console.error('Error loading logo:', err);
-        });
-    }
-
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', loadLogoToCanvas);
-    } else {
-      loadLogoToCanvas();
-    }
-  })();
-</script>
-
 <body>
   <h1>π Playground</h1>
 
@@ -369,29 +330,88 @@
     }, 600);
   }
 
-  // ========== Pi logic (show, copy, check, play) ==========
+  // ========== Pi logic ==========
   let pi = "";
   let playContext = null;
   let playTimeouts = [];
 
-  // ... (Your pi-related functions unchanged) ...
-
-  // ========== Fetch π digits ==========
+  // Fetch π digits from local pi.html file
   async function fetchPi() {
-  try {
-    const response = await fetch('pi.html'); // Local pi.html file in same directory
-    if (!response.ok) throw new Error("Failed to fetch π digits");
-    const text = await response.text();
-    pi = text.trim();
-    wrapPiChars(document.body);
-  } catch (error) {
-    console.error(error);
-    document.getElementById("result").textContent = "Failed to load π digits.";
+    try {
+      const response = await fetch('pi.html');
+      if (!response.ok) throw new Error("Failed to fetch π digits");
+      const text = await response.text();
+      // Clean the text: remove whitespace and newlines
+      pi = text.replace(/\s+/g, '');
+      // Optional: keep only digits and decimal point if needed
+      pi = pi.match(/[\d.]+/)?.[0] || "";
+      if (!pi) throw new Error("No digits found in π file");
+      // After loading pi, wrap π symbols in body if any
+      wrapPiChars(document.body);
+    } catch (error) {
+      console.error(error);
+      document.getElementById("result").textContent = "Failed to load π digits.";
+    }
   }
-}
 
+  // Show π digits according to user input
+  function showPi() {
+    const digits = parseInt(document.getElementById('digitInput').value, 10);
+    if (isNaN(digits) || digits < 1) {
+      alert("Please enter a valid number of digits.");
+      return;
+    }
+    if (!pi) {
+      document.getElementById('result').textContent = "π digits not loaded yet.";
+      return;
+    }
+    // Show digits, including "3." + digits
+    const output = pi.startsWith('3.') ? pi.substring(0, digits + 2) : pi.substring(0, digits);
+    document.getElementById('result').textContent = output;
+    animatePiSymbol();
+  }
 
-  // ========== Wrap π characters ==========
+  // Copy π digits to clipboard
+  function copyPi() {
+    if (!pi) {
+      alert("π digits not loaded yet.");
+      return;
+    }
+    const digits = parseInt(document.getElementById('digitInput').value, 10);
+    const output = pi.startsWith('3.') ? pi.substring(0, digits + 2) : pi.substring(0, digits);
+    navigator.clipboard.writeText(output).then(() => {
+      alert("π digits copied to clipboard!");
+    }).catch(() => {
+      alert("Failed to copy π digits.");
+    });
+  }
+
+  // Check user fraction approximation against π
+  function checkPi() {
+    const num = parseFloat(document.getElementById("numInput").value);
+    const den = parseFloat(document.getElementById("denInput").value);
+    const result = document.getElementById("yourPi");
+
+    if (isNaN(num) || isNaN(den) || den === 0) {
+      result.textContent = "Enter valid numerator and denominator";
+      return;
+    }
+
+    const approx = num / den;
+    const diff = Math.abs(Math.PI - approx);
+    const percentError = (diff / Math.PI) * 100;
+
+    result.textContent = `Approximation: ${approx}\nDifference from π: ${diff}\nError: ${percentError.toFixed(6)}%`;
+    animatePiSymbol();
+  }
+
+  // Play π notes on a piano (stub implementation)
+  function playPiPiano() {
+    alert("Play π piano function not implemented yet.");
+    // You can expand this function later to play notes mapped from π digits
+  }
+
+  // Wrap π characters in the document body with a span for styling
   function wrapPiChars(node) {
     if (node.nodeType === Node.TEXT_NODE && node.textContent.includes('π')) {
       const parent = node.parentNode;
@@ -411,94 +431,53 @@
     }
   }
 
-  // ========== On window load ==========
-  window.addEventListener('load', () => {
-    updateVersion();
-
-    // If developer cookie set, redirect once, then erase cookie
-    if (getCookie('developer') === '1') {
-      eraseCookie('developer');
-      window.location.href = "https://edisonrees.github.io/funpi/tan(1.26262725568).html";
-      return; // prevent further scripts running after redirect
-    }
-
-    // Initialize dark mode from cookie or system
-    const darkCookie = getCookie('darkMode');
-    if (darkCookie === '1') {
-      applyDarkMode(true);
-    } else if (darkCookie === '0') {
-      applyDarkMode(false);
-    } else {
-      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-      applyDarkMode(prefersDark);
-    }
-
-    fetchPi();
-  });
-
   // ========== Help button ==========
   document.getElementById('helpButton').addEventListener('click', () => {
     window.location.href = '/funpi/help';
   });
-  
-</script>
-<script>
-(function() {
-  function setFaviconCircle() {
-    fetch('https://edisonrees.github.io/funpi/logo.html')
-      .then(res => {
-        if (!res.ok) throw new Error('Failed to fetch logo.html');
-        return res.text();
-      })
-      .then(htmlText => {
-        const base64Match = htmlText.match(/data:image\/png;base64,[A-Za-z0-9+/=]+/);
-        if (!base64Match) throw new Error('Base64 image not found');
-        return base64Match[0];
-      })
-      .then(base64Data => {
-        const img = new Image();
-        img.crossOrigin = "anonymous";
-        img.onload = () => {
-          const size = 64;
-          const canvas = document.createElement('canvas');
-          canvas.width = size;
-          canvas.height = size;
-          const ctx = canvas.getContext('2d');
 
-          // Draw circular clipping mask
-          ctx.clearRect(0, 0, size, size);
-          ctx.save();
-          ctx.beginPath();
-          ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
-          ctx.closePath();
-          ctx.clip();
+  // ========== Favicon rendering ==========
+  (function() {
+    function setFaviconCircle() {
+      const canvas = document.getElementById("faviconPreview");
+      const ctx = canvas.getContext("2d");
+      const size = canvas.width;
 
-          // Draw image to fill canvas
-          ctx.drawImage(img, 0, 0, size, size);
+      // Clear
+      ctx.clearRect(0, 0, size, size);
 
-          ctx.restore();
+      // Circle background
+      ctx.fillStyle = "rgba(120, 0, 180, 0.5)";
+      ctx.beginPath();
+      ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+      ctx.fill();
 
-          // Create or update favicon link
-          let link = document.querySelector("link[rel*='icon']");
-          if (!link) {
-            link = document.createElement('link');
-            link.rel = 'icon';
-            document.head.appendChild(link);
-          }
-          link.href = canvas.toDataURL('image/png');
-        };
-        img.src = base64Data;
-      })
-      .catch(console.error);
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', setFaviconCircle);
-  } else {
+      // Draw π symbol in center
+      ctx.fillStyle = "white";
+      ctx.font = "48px 'Linux Libertine', serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("π", size / 2, size / 2);
+    }
     setFaviconCircle();
-  }
-})();
-</script>
+  })();
 
+  // On DOM ready
+  window.addEventListener('load', () => {
+    // Load π digits from pi.html
+    fetchPi();
+
+    // Apply dark mode if previously set
+    const darkCookie = getCookie('darkMode');
+    if (darkCookie === '1') applyDarkMode(true);
+    else applyDarkMode(false);
+
+    // Update version info from GitHub
+    updateVersion();
+
+    // Animate π symbol on load
+    animatePiSymbol();
+  });
+</script>
 </body>
 </html>
