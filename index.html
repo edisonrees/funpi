@@ -14,19 +14,31 @@
   <title>π Playground</title>
   <link href="https://fonts.googleapis.com/css2?family=Linux+Libertine&display=swap" rel="stylesheet" />
   <style>
+    /* Light mode styles */
     body {
       background: #f0f0f0;
+      color: #222;
       font-family: Arial, sans-serif;
       text-align: center;
       padding: 2em;
       position: relative;
       min-height: 100vh;
       margin: 0;
+      transition: background-color 0.3s ease, color 0.3s ease;
     }
     input, button {
       font-size: 1em;
       padding: 0.5em;
       margin: 0.5em;
+      background: #fff;
+      color: #222;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+    input:focus, button:focus {
+      outline: 2px solid #3b82f6;
+      outline-offset: 2px;
     }
     #result, #yourPi {
       font-family: monospace;
@@ -50,7 +62,7 @@
       background-clip: text !important;
       -webkit-text-fill-color: transparent !important;
       color: transparent !important;
-      text-shadow: 0 0 0px rgba(0, 0, 0, 0.2);
+      text-shadow: 0 0 0 rgba(0,0,0,0.2);
       pointer-events: none;
       transform: translate(-50%, -50%) scale(0) rotate(0deg);
       opacity: 0;
@@ -114,6 +126,43 @@
       color: #888;
       user-select: none;
     }
+
+    /* Dark mode styles */
+    body.dark-mode {
+      background: #121212;
+      color: #eee;
+    }
+    body.dark-mode input, 
+    body.dark-mode button {
+      background: #222;
+      color: #eee;
+      border: 1px solid #555;
+    }
+    body.dark-mode #tryHint {
+      color: #aaa;
+    }
+    body.dark-mode footer {
+      color: #666;
+    }
+    body.dark-mode #helpButton {
+      background-color: #444;
+    }
+    body.dark-mode #helpButton:hover {
+      background-color: #666;
+    }
+    body.dark-mode #faviconPreview {
+      box-shadow: 0 0 5px rgba(255,255,255,0.3);
+    }
+    body.dark-mode #piSymbol {
+      background: linear-gradient(90deg, #888, #3b82f6, #9a4dbb);
+      -webkit-background-clip: text !important;
+      background-clip: text !important;
+      -webkit-text-fill-color: transparent !important;
+      color: transparent !important;
+      text-shadow: 0 0 4px rgba(0,0,0,0.7);
+    }
+
+    /* Unveil popup styles injected by JS */
   </style>
 </head>
 <body>
@@ -140,291 +189,399 @@
   <div id="piSymbol">π</div>
   <button id="helpButton" aria-label="Help" title="Help">?</button>
   <canvas id="faviconPreview" width="64" height="64"></canvas>
+  <button id="darkModeToggle" aria-label="Toggle dark mode" title="Toggle dark mode" 
+          style="position: fixed; bottom: 20px; left: 80px; width: 50px; height: 50px; border-radius: 50%; 
+                 background-color: #6c757d; color: white; font-size: 1.3em; font-weight: bold; border: none; 
+                 cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 1000;">🌓</button>
 
-  <footer>Version 1.0.9 Tangent</footer>
+  <footer>Version 1.1.0 Newton</footer>
 
 <script>
-// Cookie helper functions
-function setCookie(name, value, days) {
-  const expires = new Date(Date.now() + days*864e5).toUTCString();
-  document.cookie = name + '=' + encodeURIComponent(value) + '; expires=' + expires + '; path=/';
-}
-function getCookie(name) {
-  return document.cookie.split('; ').reduce((r, v) => {
-    const parts = v.split('=');
-    return parts[0] === name ? decodeURIComponent(parts[1]) : r
-  }, '');
-}
-function eraseCookie(name) {
-  setCookie(name, '', -1);
-}
-
-// Redirect on D + 5 instantly
-document.addEventListener("keydown", (e) => {
-  if (e.key.toLowerCase() === 'd' && e.getModifierState("Shift") && e.getModifierState("Digit5")) {
-    window.location.href = "https://github.com/edisonrees/funpi/blob/main/readme.md";
+  // Cookie helper functions
+  function setCookie(name, value, days) {
+    const expires = new Date(Date.now() + days*864e5).toUTCString();
+    document.cookie = name + '=' + encodeURIComponent(value) + '; expires=' + expires + '; path=/';
   }
-});
-
-// Detect I + = pressed together and set cookie for next load redirect
-let keysPressed = {};
-
-document.addEventListener('keydown', (e) => {
-  keysPressed[e.key.toLowerCase()] = true;
-
-  // Instant redirect on D + 5
-  if (keysPressed['d'] && keysPressed['5']) {
-    window.location.href = "https://github.com/edisonrees/funpi/blob/main/readme.md";
+  function getCookie(name) {
+    return document.cookie.split('; ').reduce((r, v) => {
+      const parts = v.split('=');
+      return parts[0] === name ? decodeURIComponent(parts[1]) : r
+    }, '');
+  }
+  function eraseCookie(name) {
+    setCookie(name, '', -1);
   }
 
-  // Set cookie on I + =
-  if (keysPressed['i'] && keysPressed['=']) {
-    setCookie('developer=1', 'true', 1);
-  }
-});
+  // Redirect on D+5 instantly
+  document.addEventListener('keydown', (e) => {
+    if (e.key.toLowerCase() === 'd' && keysPressed['5']) {
+      window.location.href = "https://github.com/edisonrees/funpi/blob/main/readme.md";
+    }
+  });
+  let keysPressed = {};
+  document.addEventListener('keydown', (e) => {
+    keysPressed[e.key.toLowerCase()] = true;
+    if (keysPressed['i'] && keysPressed['=']) {
+      setCookie('developer', '1', 1);
+    }
+  });
+  document.addEventListener('keyup', (e) => {
+    keysPressed[e.key.toLowerCase()] = false;
+  });
 
-document.addEventListener('keyup', (e) => {
-  keysPressed[e.key.toLowerCase()] = false;
-});
-
-
-window.addEventListener('load', () => {
-  if (getCookie('developer') === '1') {
-    eraseCookie('developer');
-    window.location.href = 'https://edisonrees.github.io/funpi/tan(1.26262725568).html';
-  }
-});
-
-let pi = "";
-let playContext = null;
-let playTimeouts = [];
-
-const digitToNote = {
-  '0': { freq: 830.61 },
-  '1': { freq: 440.00 },
-  '2': { freq: 466.16 },
-  '3': { freq: 493.88 },
-  '4': { freq: 523.25 },
-  '5': { freq: 587.33 },
-  '6': { freq: 659.25 },
-  '7': { freq: 698.46 },
-  '8': { freq: 932.33 },
-  '9': { freq: 1046.50 }
-};
-
-document.addEventListener('DOMContentLoaded', () => {
-  wrapPiChars(document.body);
-
-  fetch("pi.html")
-    .then(res => res.text())
-    .then(text => {
-      pi = text.replace(/[^0-9.]/g, '');
-      if (!pi.startsWith("3.")) pi = "3." + pi;
-    });
+  // On page load, check cookie and redirect if set
+  window.addEventListener('load', () => {
+    if (getCookie('developer') === '1') {
+      eraseCookie('developer');
+      window.location.href = 'https://edisonrees.github.io/funpi/tan(1.26262725568).html';
+    }
+  });
 
   // Redirect help button to external page
   document.getElementById('helpButton').addEventListener('click', () => {
     window.location.href = "https://funpi.w3spaces.com/help";
   });
 
-  if (document.cookie.split(';').some(c => c.trim().startsWith('tried355113=true'))) {
-    document.getElementById('tryHint').style.display = 'none';
+  // Dark mode toggle logic
+  const darkToggleBtn = document.getElementById('darkModeToggle');
+  function applyDarkMode(dark) {
+    if(dark) {
+      document.body.classList.add('dark-mode');
+      setCookie('darkMode', '1', 365);
+    } else {
+      document.body.classList.remove('dark-mode');
+      eraseCookie('darkMode');
+    }
   }
-
-  fetch('logo.html').then(res => res.text()).then(base64 => {
-    const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      const size = 64;
-      canvas.width = size;
-      canvas.height = size;
-      const ctx = canvas.getContext('2d');
-      ctx.clearRect(0,0,size,size);
-      ctx.save();
-      ctx.beginPath();
-      ctx.arc(size/2, size/2, size/2, 0, 2 * Math.PI);
-      ctx.closePath();
-      ctx.clip();
-      ctx.drawImage(img, 0, 0, size, size);
-      ctx.restore();
-
-      const favicon = document.createElement('link');
-      favicon.rel = 'icon';
-      favicon.type = 'image/png';
-      favicon.href = canvas.toDataURL('image/png');
-      document.head.appendChild(favicon);
-
-      const preview = document.getElementById('faviconPreview');
-      const previewCtx = preview.getContext('2d');
-      previewCtx.clearRect(0,0,size,size);
-      previewCtx.drawImage(canvas, 0, 0, size, size);
-    };
-    img.src = 'data:image/png;base64,' + base64.trim();
+  // Load saved or system preference on start
+  window.addEventListener('DOMContentLoaded', () => {
+    const saved = getCookie('darkMode');
+    if(saved === '1') {
+      applyDarkMode(true);
+    } else if(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      applyDarkMode(true);
+    }
   });
-});
+  darkToggleBtn.addEventListener('click', () => {
+    const isDark = document.body.classList.contains('dark-mode');
+    applyDarkMode(!isDark);
+  });
 
-function wrapPiChars(node) {
-  if (node.nodeType === Node.TEXT_NODE && node.textContent.includes('π')) {
-    const parent = node.parentNode;
-    const parts = node.textContent.split('π');
-    parts.forEach((part, i) => {
-      if (part) parent.insertBefore(document.createTextNode(part), node);
-      if (i < parts.length - 1) {
-        const span = document.createElement('span');
-        span.className = 'pi-symbol';
-        span.textContent = 'π';
-        parent.insertBefore(span, node);
+  // Pi animation with 1/500 chance of special image
+  function animatePiSymbol() {
+    if (getCookie('diddlershown') !== 'true') {
+      if (Math.random() < 1/500) {
+        alert("Surprise!");
+        setCookie('diddlershown', 'true', 365);
+        window.open("https://i.ytimg.com/vi/vPiTMIhREC4/hq720.jpg?sqp=-oaymwEhCK4FEIIDSFryq4qpAxMIARUAAAAAGAElAADIQj0AgKJD&rs=AOn4CLAhw2_V_GZRk_mazrPxWVeaBtTHEA","_blank");
       }
+    }
+
+    const el = document.getElementById("piSymbol");
+    el.style.transition = "none";
+    el.style.opacity = "1";
+    el.style.transform = "translate(-50%, -50%) scale(0) rotate(0deg)";
+
+    requestAnimationFrame(() => {
+      el.style.transition = "transform 600ms ease-in-out, opacity 600ms ease-in-out";
+      el.style.transform = "translate(-50%, -50%) scale(2) rotate(10deg)";
     });
-    parent.removeChild(node);
-  } else if (node.nodeType === Node.ELEMENT_NODE && !['SCRIPT', 'STYLE'].includes(node.tagName)) {
-    Array.from(node.childNodes).forEach(wrapPiChars);
+
+    setTimeout(() => {
+      let angles = [1,2,3,4,5,6,7,8,9,10,9,8,7,6,5,4,3,2,1];
+      let i = 0;
+      const swingDuration = 700;
+      const intervalMs = swingDuration / angles.length;
+
+      const swingInterval = setInterval(() => {
+        if(i >= angles.length) {
+          clearInterval(swingInterval);
+          el.style.transition = "transform 400ms ease-in-out, opacity 400ms ease-in-out";
+          el.style.transform = "translate(-50%, -50%) scale(0) rotate(0deg)";
+          el.style.opacity = "0";
+          return;
+        }
+        el.style.transition = "transform 100ms ease-in-out";
+        el.style.transform = `translate(-50%, -50%) scale(2) rotate(${angles[i]}deg)`;
+        i++;
+      }, intervalMs);
+    }, 600);
   }
-}
 
-function animatePiSymbol() {
-  const el = document.getElementById("piSymbol");
-  el.style.transition = "none";
-  el.style.opacity = "1";
-  el.style.transform = "translate(-50%, -50%) scale(0) rotate(0deg)";
+  // Pi string and piano play logic
+  let pi = "";
+  let playContext = null;
+  let playTimeouts = [];
 
-  // Zoom in + rotate from 0° to 10°
-  requestAnimationFrame(() => {
-    el.style.transition = "transform 600ms ease-in-out, opacity 600ms ease-in-out";
-    el.style.transform = "translate(-50%, -50%) scale(2) rotate(10deg)";
+  const digitToNote = {
+    '0': { freq: 830.61 },
+    '1': { freq: 440.00 },
+    '2': { freq: 466.16 },
+    '3': { freq: 493.88 },
+    '4': { freq: 523.25 },
+    '5': { freq: 587.33 },
+    '6': { freq: 659.25 },
+    '7': { freq: 698.46 },
+    '8': { freq: 932.33 },
+    '9': { freq: 1046.50 }
+  };
+
+  document.addEventListener('DOMContentLoaded', () => {
+    wrapPiChars(document.body);
+
+    fetch("pi.html")
+      .then(res => res.text())
+      .then(text => {
+        pi = text.replace(/[^0-9.]/g, '');
+        if (!pi.startsWith("3.")) pi = "3." + pi;
+      });
+
+    if (document.cookie.split(';').some(c => c.trim().startsWith('tried355113=true'))) {
+      document.getElementById('tryHint').style.display = 'none';
+    }
+
+    fetch('logo.html').then(res => res.text()).then(base64 => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const size = 64;
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0,0,size,size);
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(size/2, size/2, size/2, 0, 2 * Math.PI);
+        ctx.closePath();
+        ctx.clip();
+        ctx.drawImage(img, 0, 0, size, size);
+        ctx.restore();
+
+        const favicon = document.createElement('link');
+        favicon.rel = 'icon';
+        favicon.type = 'image/png';
+        favicon.href = canvas.toDataURL('image/png');
+        document.head.appendChild(favicon);
+
+        const preview = document.getElementById('faviconPreview');
+        const previewCtx = preview.getContext('2d');
+        previewCtx.clearRect(0,0,size,size);
+        previewCtx.drawImage(canvas, 0, 0, size, size);
+      };
+      img.src = 'data:image/png;base64,' + base64.trim();
+    });
+
+    // Help button redirect (redundant with listener above but safe)
+    document.getElementById('helpButton').addEventListener('click', () => {
+      window.location.href = "https://funpi.w3spaces.com/help";
+    });
   });
 
-  // Hold peak and do rotation swing for 700ms
-  setTimeout(() => {
-    let angles = [1,2,3,4,5,6,7,8,9,10,9,8,7,6,5,4,3,2,1];
-    let i = 0;
-    const swingDuration = 700; // ms
-    const intervalMs = swingDuration / angles.length;
-    
-    const swingInterval = setInterval(() => {
-      if(i >= angles.length) {
-        clearInterval(swingInterval);
-        // Fade out after swing ends
-        el.style.transition = "transform 400ms ease-in-out, opacity 400ms ease-in-out";
-        el.style.transform = "translate(-50%, -50%) scale(0) rotate(0deg)";
-        el.style.opacity = "0";
-        return;
-      }
-      el.style.transition = "transform 100ms ease-in-out";
-      el.style.transform = `translate(-50%, -50%) scale(2) rotate(${angles[i]}deg)`;
-      i++;
-    }, intervalMs);
-  }, 600);
-}
+  // Wrap all π in the document after loading
+  window.onload = () => {
+    wrapPiChars(document.body);
+    fetchUnveil();
+  };
 
-function showPi() {
-  const n = parseInt(document.getElementById("digitInput").value, 10);
-  const resultDiv = document.getElementById("result");
-  if (!pi) {
-    resultDiv.textContent = "π is still loading... please wait.";
-    return;
+  // Wrap π characters in spans
+  function wrapPiChars(node) {
+    if (node.nodeType === Node.TEXT_NODE && node.textContent.includes('π')) {
+      const parent = node.parentNode;
+      const parts = node.textContent.split('π');
+      parts.forEach((part, i) => {
+        if (part) parent.insertBefore(document.createTextNode(part), node);
+        if (i < parts.length - 1) {
+          const span = document.createElement('span');
+          span.className = 'pi-symbol';
+          span.textContent = 'π';
+          parent.insertBefore(span, node);
+        }
+      });
+      parent.removeChild(node);
+    } else if (node.nodeType === Node.ELEMENT_NODE && !['SCRIPT', 'STYLE'].includes(node.tagName)) {
+      Array.from(node.childNodes).forEach(wrapPiChars);
+    }
   }
-  if (isNaN(n) || n < 1 || n > pi.length - 2) {
-    resultDiv.textContent = `Enter a number from 1 to ${pi.length - 2}`;
-    return;
-  }
-  resultDiv.textContent = `π to ${n} digits:\n` + pi.slice(0, n + 2);
-  // Removed big pi animation trigger here as requested
-}
 
-function copyPi() {
-  const n = parseInt(document.getElementById("digitInput").value, 10);
-  if (!pi || isNaN(n)) return alert("π not ready or invalid input");
-  const tempInput = document.createElement('textarea');
-  tempInput.value = pi.slice(0, n + 2);
-  document.body.appendChild(tempInput);
-  tempInput.select();
-  try {
-    document.execCommand('copy');
-    alert("Copied!");
-  } catch (err) {
-    alert('Failed to copy text. Please copy manually.');
-  }
-  document.body.removeChild(tempInput);
-}
-
-function checkPi() {
-  const num = parseFloat(document.getElementById("numInput").value);
-  const den = parseFloat(document.getElementById("denInput").value);
-  const result = document.getElementById("yourPi");
-  if (isNaN(num) || isNaN(den) || den === 0) {
-    result.textContent = "Invalid fraction.";
-    return;
-  }
-  const approx = num / den;
-  result.textContent = `Your approximation: ${approx}`;
-  document.getElementById('tryHint').style.display = 'none';
-  document.cookie = "tried355113=true; max-age=" + (60*60*24*365);
-  const error = Math.abs(approx - Math.PI);
-  if (error < 0.00001) { // stricter threshold for big pi animation
-    const gradient = gradients[Math.floor(Math.random() * gradients.length)];
-    const piSymbol = document.getElementById("piSymbol");
-    piSymbol.style.background = gradient;
+  function showPi() {
+    const n = parseInt(document.getElementById("digitInput").value, 10);
+    const resultDiv = document.getElementById("result");
+    if (!pi) {
+      resultDiv.textContent = "π is still loading... please wait.";
+      return;
+    }
+    if (isNaN(n) || n < 1 || n > pi.length - 2) {
+      resultDiv.textContent = `Enter a number from 1 to ${pi.length - 2}`;
+      return;
+    }
+    resultDiv.textContent = `π to ${n} digits:\n` + pi.slice(0, n + 2);
     animatePiSymbol();
   }
-}
 
-const gradients = [
-  "linear-gradient(0deg, #a1c4fd 0%, #c2e9fb 100%)",
-  "linear-gradient(0deg, #fbc7a4 0%, #fe938c 50%, #b45f06 100%)",
-  "linear-gradient(0deg, #a8e063 0%, #56ab2f 100%)",
-  "linear-gradient(0deg, #5f2c82 0%, #49a09d 100%)",
-  "linear-gradient(0deg, #f7971e 0%, #ffd200 100%)",
-  "linear-gradient(0deg, #c0c0c0, #3b82f6, #6b21a8)",
-  "linear-gradient(0deg, #89f7fe 0%, #66a6ff 100%)",
-  "linear-gradient(0deg, #ee9ca7 0%, #ffdde1 100%)",
-  "linear-gradient(0deg, #43cea2 0%, #185a9d 100%)"
-];
-
-function playTone(ctx, frequency, startTime, duration) {
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-  osc.frequency.value = frequency;
-  osc.type = 'sine';
-  gain.gain.setValueAtTime(0.0001, startTime);
-  gain.gain.exponentialRampToValueAtTime(0.3, startTime + 0.01);
-  gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
-  osc.connect(gain);
-  gain.connect(ctx.destination);
-  osc.start(startTime);
-  osc.stop(startTime + duration);
-}
-
-function playPiPiano() {
-  if (!pi) return alert("π digits still loading...");
-  if (playContext) {
-    playContext.close();
-    playTimeouts.forEach(t => clearTimeout(t));
-    playTimeouts = [];
-    playContext = null;
+  function copyPi() {
+    const n = parseInt(document.getElementById("digitInput").value, 10);
+    if (!pi || isNaN(n)) return alert("π not ready or invalid input");
+    const tempInput = document.createElement('textarea');
+    tempInput.value = pi.slice(0, n + 2);
+    document.body.appendChild(tempInput);
+    tempInput.select();
+    try {
+      document.execCommand('copy');
+      alert("Copied!");
+    } catch (err) {
+      alert('Failed to copy text. Please copy manually.');
+    }
+    document.body.removeChild(tempInput);
   }
-  const bpm = parseInt(document.getElementById('bpmInput').value, 10);
-  const seconds = parseInt(document.getElementById('durationInput').value, 10);
-  if (isNaN(bpm) || bpm < 30 || bpm > 300 || isNaN(seconds) || seconds < 1) {
-    alert('Invalid BPM or duration');
-    return;
-  }
-  playContext = new AudioContext();
-  const noteDuration = 60 / bpm;
-  let currentTime = playContext.currentTime + 0.1;
-  const maxNotes = Math.floor((seconds * 60) / bpm);
 
-  let notesPlayed = 0;
-  for (let i = 0; i < pi.length && notesPlayed < maxNotes; i++) {
-    const digit = pi[i];
-    if (digitToNote[digit]) {
+  function checkPi() {
+    const num = parseFloat(document.getElementById("numInput").value);
+    const den = parseFloat(document.getElementById("denInput").value);
+    const result = document.getElementById("yourPi");
+    if (isNaN(num) || isNaN(den) || den === 0) {
+      result.textContent = "Invalid fraction.";
+      return;
+    }
+    const approx = num / den;
+    result.textContent = `Your approximation: ${approx}`;
+    document.getElementById('tryHint').style.display = 'none';
+    document.cookie = "tried355113=true; max-age=" + (60*60*24*365);
+    const error = Math.abs(approx - Math.PI);
+    if (error < 0.00001) {
+      const gradient = gradients[Math.floor(Math.random() * gradients.length)];
+      const piSymbol = document.getElementById("piSymbol");
+      piSymbol.style.background = gradient;
+      animatePiSymbol();
+    }
+  }
+
+  const gradients = [
+    "linear-gradient(0deg, #a1c4fd 0%, #c2e9fb 100%)",
+    "linear-gradient(0deg, #fbc7a4 0%, #fe938c 50%, #b45f06 100%)",
+    "linear-gradient(0deg, #a8e063 0%, #56ab2f 100%)",
+    "linear-gradient(0deg, #5f2c82 0%, #49a09d 100%)",
+    "linear-gradient(0deg, #f7971e 0%, #ffd200 100%)",
+    "linear-gradient(0deg, #c0c0c0, #3b82f6, #6b21a8)",
+    "linear-gradient(0deg, #89f7fe 0%, #66a6ff 100%)",
+    "linear-gradient(0deg, #ee9ca7 0%, #ffdde1 100%)",
+    "linear-gradient(0deg, #43cea2 0%, #185a9d 100%)"
+  ];
+
+  function playTone(ctx, frequency, startTime, duration) {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.frequency.value = frequency;
+    osc.type = 'sine';
+    gain.gain.setValueAtTime(0.0001, startTime);
+    gain.gain.exponentialRampToValueAtTime(0.3, startTime + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(startTime);
+    osc.stop(startTime + duration);
+  }
+
+  function playPiPiano() {
+    if (!pi) return alert("π digits still loading...");
+    if (playContext) {
+      playContext.close();
+      playTimeouts.forEach(t => clearTimeout(t));
+      playTimeouts = [];
+      playContext = null;
+    }
+    const bpm = parseInt(document.getElementById('bpmInput').value, 10);
+    const seconds = parseInt(document.getElementById('durationInput').value, 10);
+    if (isNaN(bpm) || bpm < 30 || bpm > 300 || isNaN(seconds) || seconds < 1) {
+      alert('Invalid BPM or duration');
+      return;
+    }
+    playContext = new AudioContext();
+    const noteDuration = 60 / bpm;
+    let currentTime = playContext.currentTime + 0.1;
+    const maxNotes = Math.floor((seconds * 60) / bpm);
+    for (let i = 0; i < maxNotes; i++) {
+      const digit = pi[i];
+      if (digit === '.' || !digitToNote[digit]) continue;
       playTone(playContext, digitToNote[digit].freq, currentTime, noteDuration * 0.9);
       currentTime += noteDuration;
-      notesPlayed++;
     }
-    // skip non-digit chars like '.'
   }
-}
+
+  // Unveil logic — inject popup and styles dynamically
+  function injectUnveilPopup() {
+    if (document.getElementById('unveilPopup')) return;
+
+    const style = document.createElement('style');
+    style.textContent = `
+      #unveilPopup {
+        display: none;
+        position: fixed;
+        top:0; left:0; width:100vw; height:100vh;
+        background-color: rgba(0,0,0,0.85);
+        color: white;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        text-align: center;
+        padding: 2em;
+        font-family: Arial, sans-serif;
+      }
+      #unveilPopupContent {
+        background: #222;
+        padding: 2em;
+        border-radius: 10px;
+        max-width: 600px;
+        box-shadow: 0 0 10px #000;
+        position: relative;
+      }
+      #unveilPopupClose {
+        position: absolute;
+        top: 10px;
+        right: 15px;
+        background: transparent;
+        border: none;
+        color: white;
+        font-size: 1.5em;
+        cursor: pointer;
+      }
+      body.dark-mode #unveilPopupContent {
+        background: #111;
+      }
+    `;
+    document.head.appendChild(style);
+
+    const popup = document.createElement('div');
+    popup.id = 'unveilPopup';
+    popup.style.display = 'none';
+    popup.innerHTML = `
+      <div id="unveilPopupContent" role="dialog" aria-modal="true" aria-labelledby="unveilPopupTitle">
+        <button id="unveilPopupClose" aria-label="Close announcement">&times;</button>
+        <div id="unveilText">Loading announcement...</div>
+      </div>
+    `;
+    document.body.appendChild(popup);
+
+    document.getElementById('unveilPopupClose').addEventListener('click', () => {
+      popup.style.display = 'none';
+    });
+  }
+
+  function fetchUnveil() {
+    injectUnveilPopup();
+
+    fetch("https://edisonrees.github.io/funpi/unveil.json")
+      .then(res => res.json())
+      .then(data => {
+        const shownPrompt = getCookie("unveilId");
+        if (data.showunveil === "true" && shownPrompt !== data.unveilid) {
+          document.getElementById("unveilText").textContent = data.unveiltext;
+          const popup = document.getElementById("unveilPopup");
+          popup.style.display = "flex";
+          setCookie("unveilId", data.unveilid, 365);
+        }
+      })
+      .catch(err => console.error("Unveil fetch failed:", err));
+  }
 </script>
 </body>
 </html>
