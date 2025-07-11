@@ -95,7 +95,7 @@
   </div>
   <div>
     <label for="piAnswer">Enter π digits:</label>
-    <input type="text" id="piAnswer" inputmode="decimal" autocomplete="off" />
+    <input type="text" id="piAnswer" inputmode="decimal" autocomplete="off" placeholder="e.g., 3.14" />
     <button id="submitAnswerBtn">Submit</button>
   </div>
   <div id="quizFeedback"></div>
@@ -114,21 +114,16 @@
 
 <script>
 (() => {
-  // Globals
   let piDigits = "";
   let currentDecimalCount = 2; // starts with 2 decimals after decimal point: 3.14
-  const certImageSrcPath = 'cert.html'; // must be a local file containing base64 image (see below for how to parse)
+  const certImageSrcPath = 'cert.html'; // local file with base64 image
   let certBase64Image = "";
 
   // Bounding boxes for overlay text
-  // Format: [x, y] coords, clockwise corners
-  // We'll use the upper-left corner and width/height calculated from these coords for drawing text boxes
-
   const percentileBox = [[174,316],[177,561],[1068,316],[1067,559]];
   const nameBox       = [[256,707],[255,783],[912,781],[905,718]];
   const sha1Box       = [[945,838],[947,865],[1234,868],[1233,831]];
 
-  // Utility: get bounding rect from these 4 points
   function getBoundingRect(points) {
     const xs = points.map(p => p[0]);
     const ys = points.map(p => p[1]);
@@ -139,8 +134,7 @@
     return {x,y,width,height};
   }
 
-  // SHA1 implementation (simple, fast JS version)
-  // Source adapted from https://geraintluff.github.io/sha1/
+  // SHA1 implementation
   function sha1(msg) {
     function rotate_left(n,s) { return (n<<s) | (n>>>(32-s)); }
     function cvt_hex(val) {
@@ -161,7 +155,7 @@
     let A, B, C, D, E;
     let temp;
 
-    msg = unescape(encodeURIComponent(msg)); // UTF8 encode
+    msg = unescape(encodeURIComponent(msg));
     let msg_len = msg.length;
     let word_array = [];
     for(i=0; i<msg_len-3; i+=4) {
@@ -205,13 +199,11 @@
     return sha1hex.toLowerCase();
   }
 
-  // Load pi.html from local
   async function loadPi() {
     try {
       const resp = await fetch('pi.html');
       if(!resp.ok) throw new Error('pi.html fetch failed');
       const text = await resp.text();
-      // Clean non-digit chars (maybe pi.html has newline, spaces)
       piDigits = text.replace(/[^0-9]/g,'');
       console.log('Loaded π digits length:', piDigits.length);
     } catch(e) {
@@ -220,13 +212,11 @@
     }
   }
 
-  // Load cert.html and parse base64 image out of it
   async function loadCertImage() {
     try {
       const resp = await fetch(certImageSrcPath);
       if(!resp.ok) throw new Error('cert.html fetch failed');
       const text = await resp.text();
-      // Extract base64 image data, assumes data:image/png;base64,... somewhere inside
       const match = text.match(/data:image\/png;base64,[A-Za-z0-9+/=]+/);
       if(!match) throw new Error('Base64 image not found in cert.html');
       certBase64Image = match[0];
@@ -237,13 +227,11 @@
     }
   }
 
-  // Search pi digits for input string (digits only)
   function searchPiDigits(query) {
     if(!query.match(/^\d+$/)) return null;
     const firstIndex = piDigits.indexOf(query);
     if(firstIndex === -1) return null;
 
-    // Count total occurrences
     let count = 0;
     let pos = 0;
     while(true) {
@@ -256,15 +244,10 @@
     return {firstIndex, count};
   }
 
-  // Percentile calculation (simple normal distribution approx)
-  // We'll generate a percentile by comparing number of correct decimals vs typical memorization data (made up)
-  // Median ~ 15 digits, SD ~ 10 digits for average memorizer, adjust accordingly
   function calculatePercentile(correctDigits) {
     const mean = 15;
     const sd = 10;
-    // Using CDF of normal distribution approximation (error function)
     function erf(x) {
-      // Abramowitz and Stegun approximation
       const a1= 0.254829592, a2=-0.284496736, a3=1.421413741, a4=-1.453152027, a5=1.061405429;
       const p=0.3275911;
       const sign = x < 0 ? -1 : 1;
@@ -278,7 +261,6 @@
     return Math.min(Math.max(Math.round(cdf * 100), 1), 99);
   }
 
-  // Draw text inside bounding box on canvas context with wrapping and resizing
   function drawTextInBox(ctx, text, boxPoints, maxFontSize=80, minFontSize=12) {
     const rect = getBoundingRect(boxPoints);
     const x = rect.x;
@@ -290,11 +272,9 @@
     ctx.fillStyle = 'black';
     ctx.textBaseline = 'top';
 
-    // Fit font size by binary search
     let fontSize = maxFontSize;
     ctx.font = `${fontSize}px Arial`;
 
-    // Measure and reduce font size until text fits inside width and height
     while (fontSize > minFontSize) {
       let words = text.split(' ');
       let line = '';
@@ -316,7 +296,6 @@
       ctx.font = `${fontSize}px Arial`;
     }
 
-    // Draw lines vertically centered
     const totalTextHeight = fontSize * lines.length;
     let offsetY = y + (height - totalTextHeight) / 2;
 
@@ -330,26 +309,17 @@
     ctx.restore();
   }
 
-  // Generate the popup canvas image with cert base image + text overlays
   function showPercentilePopup(percentile, name) {
     const canvas = document.getElementById('popupCanvas');
     const ctx = canvas.getContext('2d');
-
-    // Clear
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Draw cert base image
     const img = new Image();
     img.onload = () => {
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-      // Draw percentile text in percentile box
       drawTextInBox(ctx, `Percentile: ${percentile}th`, percentileBox);
-
-      // Draw name in name box
       drawTextInBox(ctx, name, nameBox);
 
-      // Draw SHA1 of name+date in sha1 box
       const mmddyy = (() => {
         const d = new Date();
         const mm = String(d.getMonth()+1).padStart(2,'0');
@@ -357,77 +327,57 @@
         const yy = String(d.getFullYear()).slice(-2);
         return mm + dd + yy;
       })();
+
       const sha1code = sha1(name + mmddyy);
       drawTextInBox(ctx, sha1code, sha1Box);
 
-      // Show popup
-      const popup = document.getElementById('percentilePopup');
-      popup.style.visibility = 'visible';
+      document.getElementById('percentilePopup').style.visibility = 'visible';
     };
     img.src = certBase64Image;
   }
 
-  // Close popup handler
-document.getElementById('closePopupBtn').onclick = () => {
-  document.getElementById('percentilePopup').style.visibility = 'hidden';
-};
+  document.getElementById('closePopupBtn').onclick = () => {
+    document.getElementById('percentilePopup').style.visibility = 'hidden';
+  };
 
-// Quiz logic
-function quizCheckAnswer() {
-  const answerInput = document.getElementById('piAnswer');
-  const nameInput = document.getElementById('playerName');
-  const feedbackDiv = document.getElementById('quizFeedback');
-  const userAnswerRaw = answerInput.value.trim();
-  const name = nameInput.value.trim() || "Anonymous";
+  function quizCheckAnswer() {
+    const answerInput = document.getElementById('piAnswer');
+    const nameInput = document.getElementById('playerName');
+    const feedbackDiv = document.getElementById('quizFeedback');
+    const userAnswerRaw = answerInput.value.trim();
+    const name = nameInput.value.trim() || "Anonymous";
 
-  // Validate input: digits with exactly one decimal point allowed
-  if (!/^\d+(\.\d+)?$/.test(userAnswerRaw)) {
-    feedbackDiv.textContent = "Please enter digits only (0-9) and exactly one decimal point.";
-    return;
-  }
-
-  // Required pi substring to match: "3" + "." + first N decimals from piDigits starting at index 0
-  // piDigits contains digits only (no decimal), first digit is '1' after decimal, so prefix "3." manually
-  let requiredPi = "3." + piDigits.slice(0, currentDecimalCount);
-
-  // User answer must be exactly the same length
-  if (userAnswerRaw.length !== requiredPi.length) {
-    feedbackDiv.textContent = `You must enter exactly ${requiredPi.length} characters including the decimal point.`;
-    return;
-  }
-
-  // ... rest of your logic ...
-}
-
-    if(userAnswerRaw[1] !== '.') {
-      feedbackDiv.textContent = 'Please include the decimal point after the 3 (e.g., 3.14).';
+    // Validate: digits and exactly one decimal point after '3'
+    if (!/^3\.\d+$/.test(userAnswerRaw)) {
+      feedbackDiv.textContent = "Please enter digits only with the decimal point after the 3 (e.g., 3.14).";
       return;
     }
 
-    if(userAnswerRaw.slice(2) === piDigits.slice(0, currentDecimalCount)) {
-      // Correct!
+    let requiredPi = "3." + piDigits.slice(0, currentDecimalCount);
+
+    if(userAnswerRaw.length !== requiredPi.length) {
+      feedbackDiv.textContent = `You must enter exactly ${requiredPi.length} characters including the decimal point.`;
+      return;
+    }
+
+    if(userAnswerRaw === requiredPi) {
       feedbackDiv.textContent = `Correct for ${currentDecimalCount} decimal places! Next level: ${currentDecimalCount + 1} decimals.`;
       currentDecimalCount++;
       answerInput.value = "";
     } else {
-      // Incorrect - grade percentile and show popup
-      const correctDigitsCount = (() => {
-        let count = 0;
-        for(let i=0; i<currentDecimalCount; i++) {
-          if(userAnswerRaw[i+2] === piDigits[i]) count++;
-          else break;
-        }
-        return count;
-      })();
+      let correctDigitsCount = 0;
+      for(let i = 2; i < requiredPi.length; i++) {
+        if(userAnswerRaw[i] === piDigits[i-2]) correctDigitsCount++;
+        else break;
+      }
       const percentile = calculatePercentile(correctDigitsCount);
       feedbackDiv.textContent = `Incorrect. You got ${correctDigitsCount} digits correct. Percentile: ${percentile}%.`;
       showPercentilePopup(percentile, name);
-      currentDecimalCount = 2; // reset to 2 decimals
+      currentDecimalCount = 2;
       answerInput.value = "";
     }
   }
 
-  // Button bindings
   document.getElementById('searchBtn').onclick = () => {
     const q = document.getElementById('searchInput').value.trim();
     const res = document.getElementById('searchResult');
@@ -449,7 +399,6 @@ function quizCheckAnswer() {
 
   document.getElementById('submitAnswerBtn').onclick = quizCheckAnswer;
 
-  // Load resources at start
   loadPi();
   loadCertImage();
 })();
