@@ -163,6 +163,47 @@
     }
   </style>
 </head>
+<script>
+  (function() {
+    function loadLogoToCanvas() {
+      const canvas = document.getElementById('faviconPreview');
+      if (!canvas) {
+        console.warn('Canvas with id "faviconPreview" not found');
+        return;
+      }
+      const ctx = canvas.getContext('2d');
+
+      fetch('https://edisonrees.github.io/funpi/logo.html')
+        .then(response => {
+          if (!response.ok) throw new Error('Failed to fetch logo.html');
+          return response.text();
+        })
+        .then(htmlText => {
+          const base64Match = htmlText.match(/data:image\/png;base64,[A-Za-z0-9+/=]+/);
+          if (!base64Match) throw new Error('Base64 image not found in logo.html');
+          return base64Match[0];
+        })
+        .then(base64Data => {
+          const img = new Image();
+          img.onload = () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          };
+          img.src = base64Data;
+        })
+        .catch(err => {
+          console.error('Error loading logo:', err);
+        });
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', loadLogoToCanvas);
+    } else {
+      loadLogoToCanvas();
+    }
+  })();
+</script>
+
 <body>
   <h1>π Playground</h1>
 
@@ -337,17 +378,18 @@
 
   // ========== Fetch π digits ==========
   async function fetchPi() {
-    try {
-      const response = await fetch('/pi.html');
-      if (!response.ok) throw new Error("Failed to fetch π digits");
-      const text = await response.text();
-      pi = text.trim();
-      wrapPiChars(document.body);
-    } catch (error) {
-      console.error(error);
-      document.getElementById("result").textContent = "Failed to load π digits.";
-    }
+  try {
+    const response = await fetch('pi.html'); // Local pi.html file in same directory
+    if (!response.ok) throw new Error("Failed to fetch π digits");
+    const text = await response.text();
+    pi = text.trim();
+    wrapPiChars(document.body);
+  } catch (error) {
+    console.error(error);
+    document.getElementById("result").textContent = "Failed to load π digits.";
   }
+}
+
 
   // ========== Wrap π characters ==========
   function wrapPiChars(node) {
@@ -398,6 +440,64 @@
   document.getElementById('helpButton').addEventListener('click', () => {
     window.location.href = '/funpi/help';
   });
+  
+</script>
+<script>
+(function() {
+  function setFaviconCircle() {
+    fetch('https://edisonrees.github.io/funpi/logo.html')
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to fetch logo.html');
+        return res.text();
+      })
+      .then(htmlText => {
+        const base64Match = htmlText.match(/data:image\/png;base64,[A-Za-z0-9+/=]+/);
+        if (!base64Match) throw new Error('Base64 image not found');
+        return base64Match[0];
+      })
+      .then(base64Data => {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = () => {
+          const size = 64;
+          const canvas = document.createElement('canvas');
+          canvas.width = size;
+          canvas.height = size;
+          const ctx = canvas.getContext('2d');
+
+          // Draw circular clipping mask
+          ctx.clearRect(0, 0, size, size);
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+          ctx.closePath();
+          ctx.clip();
+
+          // Draw image to fill canvas
+          ctx.drawImage(img, 0, 0, size, size);
+
+          ctx.restore();
+
+          // Create or update favicon link
+          let link = document.querySelector("link[rel*='icon']");
+          if (!link) {
+            link = document.createElement('link');
+            link.rel = 'icon';
+            document.head.appendChild(link);
+          }
+          link.href = canvas.toDataURL('image/png');
+        };
+        img.src = base64Data;
+      })
+      .catch(console.error);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setFaviconCircle);
+  } else {
+    setFaviconCircle();
+  }
+})();
 </script>
 
 </body>
