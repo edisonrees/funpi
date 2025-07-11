@@ -141,7 +141,7 @@
   <button id="helpButton" aria-label="Help" title="Help">?</button>
   <canvas id="faviconPreview" width="64" height="64"></canvas>
 
-  <footer>Version 1.0.8 Tangent</footer>
+  <footer>Version 1.0.9 Tangent</footer>
 
 <script>
 // Cookie helper functions
@@ -168,15 +168,25 @@ document.addEventListener("keydown", (e) => {
 
 // Detect I + = pressed together and set cookie for next load redirect
 let keysPressed = {};
+
 document.addEventListener('keydown', (e) => {
   keysPressed[e.key.toLowerCase()] = true;
+
+  // Instant redirect on D + 5
+  if (keysPressed['d'] && keysPressed['5']) {
+    window.location.href = "https://github.com/edisonrees/funpi/blob/main/readme.md";
+  }
+
+  // Set cookie on I + =
   if (keysPressed['i'] && keysPressed['=']) {
-    setCookie('developer', '1', 1); // cookie name 'developer', value '1'
+    setCookie('developer=1', 'true', 1);
   }
 });
+
 document.addEventListener('keyup', (e) => {
   keysPressed[e.key.toLowerCase()] = false;
 });
+
 
 window.addEventListener('load', () => {
   if (getCookie('developer') === '1') {
