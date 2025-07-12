@@ -19,7 +19,7 @@
     }
     if (getCookie('developer') === '1') {
       eraseCookie('developer');
-      window.location.href = '/funpi/tan(1.26262725568).html';
+      window.location.href = '/tan(1.26262725568).html';
     }
   </script>
 
@@ -45,8 +45,7 @@
       .catch(err => console.error("Failed to load logo.html:", err));
   </script>
 
-  <!-- Google tag (gtag.js) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-LEX1P4GZEJ"></script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-LEX1P4GZEJ"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
@@ -226,7 +225,7 @@
 
   <section id="searchPiSection" style="margin-top: 2em;">
     <h2>Search π Digits</h2>
-    <input type="number" id="searchInput" placeholder="Enter digit(s) to find" pattern="\d*" />
+    <input type="text" id="searchInput" placeholder="Enter digit(s) to find" pattern="\d*" />
     <button id="searchBtn">Search in π</button>
     <div id="searchResult" style="margin-top: 1em; font-family: monospace;"></div>
   </section>
@@ -459,27 +458,44 @@
     }
   }
 
-  // Search π digits functionality
-  document.getElementById('searchBtn').addEventListener('click', () => {
-    const searchTerm = document.getElementById('searchInput').value.trim();
-    const resultDiv = document.getElementById('searchResult');
+  // ========== Search π digits functionality (REVERTED TO ORIGINAL LOGIC) ==========
+  function searchPiDigits(query) {
+    if (!query.match(/^\d+$/)) return null;
+    const piOnlyDigits = pi.replace(/\D/g, ''); // Just digits, no decimal points or anything else
+    const firstIndex = piOnlyDigits.indexOf(query);
+    if (firstIndex === -1) return null;
 
-    if (!searchTerm.match(/^\d+$/)) {
-      resultDiv.textContent = "Please enter digits only.";
+    let count = 0;
+    let pos = 0;
+    while (true) {
+      pos = piOnlyDigits.indexOf(query, pos);
+      if (pos === -1) break;
+      count++;
+      pos += query.length;
+    }
+
+    return { firstIndex, count };
+  }
+
+  document.getElementById('searchBtn').addEventListener('click', () => {
+    const q = document.getElementById('searchInput').value.trim();
+    const res = document.getElementById('searchResult');
+    if (!q.match(/^\d+$/)) {
+      res.textContent = "Please enter digits only.";
       return;
     }
     if (!pi) {
-      resultDiv.textContent = "π digits not loaded yet.";
+      res.textContent = "π digits not loaded yet.";
       return;
     }
-
-    const index = pi.indexOf(searchTerm);
-    if (index === -1) {
-      resultDiv.textContent = `"${searchTerm}" not found in π digits.`;
+    const found = searchPiDigits(q);
+    if (found) {
+      res.textContent = `Found "${q}" first at index ${found.firstIndex} (0-based, decimals after decimal point), total occurrences: ${found.count}`;
     } else {
-      resultDiv.textContent = `"${searchTerm}" found at position ${index + 1} (1-based).`;
+      res.textContent = `Digit sequence "${q}" not found in loaded π digits.`;
     }
   });
+
 
   // Load π digits on page load
   fetchPi();
