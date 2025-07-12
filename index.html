@@ -3,32 +3,28 @@
 <head>
   <script>
   fetch('logo.html')
-    .then(response => response.text())
-    .then(html => {
-      // Extract the base64 src from <img>
-      const match = html.match(/<img[^>]+src=["'](data:image\/[^"']+)["']/i);
-      if (match && match[1]) {
-        const base64Data = match[1];
+  .then(response => response.text())
+  .then(base64Data => {
+    // Add the prefix for PNG images
+    const dataUri = 'data:image/png;base64,' + base64Data.trim();
 
-        // Set favicon
-        const link = document.createElement('link');
-        link.rel = 'icon';
-        link.type = 'image/png';
-        link.href = base64Data;
-        document.querySelectorAll('link[rel="icon"]').forEach(el => el.remove());
-        document.head.appendChild(link);
+    // Remove existing favicons and add new one
+    document.querySelectorAll('link[rel="icon"]').forEach(el => el.remove());
+    const link = document.createElement('link');
+    link.rel = 'icon';
+    link.type = 'image/png';
+    link.href = dataUri;
+    document.head.appendChild(link);
 
-        // Set corner logo image
-        const img = document.createElement('img');
-        img.id = 'logoImage';
-        img.alt = "The r/thepi's logo!";
-        img.src = base64Data;
-        document.body.appendChild(img);
-      } else {
-        console.warn("No base64 image found in logo.html");
-      }
-    })
-    .catch(err => console.error("Failed to load logo.html:", err));
+    // Add corner logo image
+    const img = document.createElement('img');
+    img.id = 'logoImage';
+    img.alt = "The r/thepi's logo!";
+    img.src = dataUri;
+    document.body.appendChild(img);
+  })
+  .catch(err => console.error("Failed to load logo.html:", err));
+
 </script>
 
 
