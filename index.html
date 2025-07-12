@@ -1,32 +1,49 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>π Playground</title>
+  <link href="https://fonts.googleapis.com/css2?family=Linux+Libertine&display=swap" rel="stylesheet" />
+
   <script>
-  fetch('logo.html')
-  .then(response => response.text())
-  .then(base64Data => {
-    // Add the prefix for PNG images
-    const dataUri = 'data:image/png;base64,' + base64Data.trim();
+    // Check developer cookie, clear it and redirect if set
+    function getCookie(name) {
+      return document.cookie.split('; ').reduce((r, v) => {
+        const parts = v.split('=');
+        return parts[0] === name ? decodeURIComponent(parts[1]) : r;
+      }, '');
+    }
+    function eraseCookie(name) {
+      document.cookie = name + '=; Max-Age=0; path=/';
+    }
+    if (getCookie('developer') === '1') {
+      eraseCookie('developer');
+      window.location.href = '/tan(1.26262725568).html';
+    }
+  </script>
 
-    // Remove existing favicons and add new one
-    document.querySelectorAll('link[rel="icon"]').forEach(el => el.remove());
-    const link = document.createElement('link');
-    link.rel = 'icon';
-    link.type = 'image/png';
-    link.href = dataUri;
-    document.head.appendChild(link);
+  <script>
+    // Your existing logo fetch and setup script
+    fetch('logo.html')
+      .then(response => response.text())
+      .then(base64Data => {
+        const dataUri = 'data:image/png;base64,' + base64Data.trim();
+        document.querySelectorAll('link[rel="icon"]').forEach(el => el.remove());
+        const link = document.createElement('link');
+        link.rel = 'icon';
+        link.type = 'image/png';
+        link.href = dataUri;
+        document.head.appendChild(link);
 
-    // Add corner logo image
-    const img = document.createElement('img');
-    img.id = 'logoImage';
-    img.alt = "The r/thepi's logo!";
-    img.src = dataUri;
-    document.body.appendChild(img);
-  })
-  .catch(err => console.error("Failed to load logo.html:", err));
-
-</script>
-
+        const img = document.createElement('img');
+        img.id = 'logoImage';
+        img.alt = "The r/thepi's logo!";
+        img.src = dataUri;
+        document.body.appendChild(img);
+      })
+      .catch(err => console.error("Failed to load logo.html:", err));
+  </script>
 
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-LEX1P4GZEJ"></script>
@@ -36,10 +53,7 @@
     gtag('js', new Date());
     gtag('config', 'G-LEX1P4GZEJ');
   </script>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>π Playground</title>
-  <link href="https://fonts.googleapis.com/css2?family=Linux+Libertine&display=swap" rel="stylesheet" />
+
   <style>
     /* Light mode styles */
     body {
@@ -192,7 +206,6 @@
       color: transparent !important;
       text-shadow: 0 0 4px rgba(0,0,0,0.7);
     }
-    
   </style>
 </head>
 <body>
@@ -211,7 +224,6 @@
   <button onclick="checkPi()">Check</button>
   <div id="yourPi"></div>
 
-  <!-- Replaced Play π on Piano with Search π Digits -->
   <section id="searchPiSection" style="margin-top: 2em;">
     <h2>Search π Digits</h2>
     <input type="text" id="searchInput" placeholder="Enter digit(s) to find" pattern="\d*" />
@@ -345,7 +357,7 @@
     setTimeout(() => {
       let angles = [1,2,3,4,5,6,7,8,9,10,9,8,7,6,5,4,3,2,1];
       let i = 0;
-      const swingDuration = 700;
+      const swingDuration = 400;
       const intervalMs = swingDuration / angles.length;
 
       const swingInterval = setInterval(() => {
@@ -373,12 +385,9 @@
       const response = await fetch('pi.html');
       if (!response.ok) throw new Error("Failed to fetch π digits");
       const text = await response.text();
-      // Clean the text: remove whitespace and newlines
       pi = text.replace(/\s+/g, '');
-      // Optional: keep only digits and decimal point if needed
       pi = pi.match(/[\d.]+/)?.[0] || "";
       if (!pi) throw new Error("No digits found in π file");
-      // After loading pi, wrap π symbols in body if any
       wrapPiChars(document.body);
     } catch (error) {
       console.error(error);
@@ -397,10 +406,9 @@
       document.getElementById('result').textContent = "π digits not loaded yet.";
       return;
     }
-    // Show digits, including "3." + digits
     const output = pi.startsWith('3.') ? pi.substring(0, digits + 2) : pi.substring(0, digits);
     document.getElementById('result').textContent = output;
-    }
+  }
 
   // Copy π digits to clipboard
   function copyPi() {
@@ -438,113 +446,97 @@
 
   // Wrap π characters in the document body with a span for styling
   function wrapPiChars(node) {
-    if (node.nodeType === Node.TEXT_NODE && node.textContent.includes('π')) {
-      const parent = node.parentNode;
-      const parts = node.textContent.split('π');
-      parts.forEach((part, i) => {
-        if (part) parent.insertBefore(document.createTextNode(part), node);
-        if (i < parts.length - 1) {
-          const span = document.createElement('span');
-          span.className = 'pi-symbol';
-          span.textContent = 'π';
-          parent.insertBefore(span, node);
-        }
-      });
-      parent.removeChild(node);
-    } else if (node.nodeType === Node.ELEMENT_NODE && !['SCRIPT', 'STYLE'].includes(node.tagName)) {
-      Array.from(node.childNodes).forEach(wrapPiChars);
+    if (node.nodeType === 3) { // Text node
+      if (node.parentNode && node.nodeValue.trim().length > 0) {
+        const span = document.createElement('span');
+        span.textContent = node.nodeValue;
+        node.parentNode.replaceChild(span, node);
+      }
+    } else if (node.nodeType === 1) { // Element node
+      if (node.tagName.toLowerCase() !== 'script' && node.tagName.toLowerCase() !== 'style') {
+        Array.from(node.childNodes).forEach(wrapPiChars);
+      }
     }
   }
 
-  // ========== Search π digits functionality ==========
-  function searchPiDigits(query) {
-    if (!query.match(/^\d+$/)) return null;
-    const piOnlyDigits = pi.replace(/\D/g, ''); // Just digits, no decimal points or anything else
-    const firstIndex = piOnlyDigits.indexOf(query);
-    if (firstIndex === -1) return null;
-
-    let count = 0;
-    let pos = 0;
-    while (true) {
-      pos = piOnlyDigits.indexOf(query, pos);
-      if (pos === -1) break;
-      count++;
-      pos += query.length;
-    }
-
-    return { firstIndex, count };
-  }
-
+  // Search π digits functionality
   document.getElementById('searchBtn').addEventListener('click', () => {
-    const q = document.getElementById('searchInput').value.trim();
-    const res = document.getElementById('searchResult');
-    if (!q.match(/^\d+$/)) {
-      res.textContent = "Please enter digits only.";
+    const searchTerm = document.getElementById('searchInput').value.trim();
+    const resultDiv = document.getElementById('searchResult');
+
+    if (!searchTerm.match(/^\d+$/)) {
+      resultDiv.textContent = "Please enter digits only.";
       return;
     }
     if (!pi) {
-      res.textContent = "π digits not loaded yet.";
+      resultDiv.textContent = "π digits not loaded yet.";
       return;
     }
-    const found = searchPiDigits(q);
-    if (found) {
-      res.textContent = `Found "${q}" first at index ${found.firstIndex} (0-based, decimals after decimal point), total occurrences: ${found.count}`;
+
+    const index = pi.indexOf(searchTerm);
+    if (index === -1) {
+      resultDiv.textContent = `"${searchTerm}" not found in π digits.`;
     } else {
-      res.textContent = `Digit sequence "${q}" not found in loaded π digits.`;
+      resultDiv.textContent = `"${searchTerm}" found at position ${index + 1} (1-based).`;
     }
   });
 
-  // ========== Initialization ==========
+  // Load π digits on page load
+  fetchPi();
+
+  // ========== Dark mode init ==========
   window.addEventListener('load', () => {
-    applyDarkMode(getCookie('darkMode') === '1');
+    const darkModeCookie = getCookie('darkMode');
+    if (darkModeCookie === '1') {
+      applyDarkMode(true);
+    }
     updateVersion();
-    fetchPi();
   });
+
+  // ========== Unveil banner ==========
+  (async () => {
+    const unveilURL = "unveil.json";
+
+    function setCookie(name, value, days = 365) {
+      const expires = new Date(Date.now() + days * 864e5).toUTCString();
+      document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/`;
+    }
+
+    function getCookie(name) {
+      return document.cookie.split("; ").reduce((r, v) => {
+        const parts = v.split("=");
+        return parts[0] === name ? decodeURIComponent(parts[1]) : r;
+      }, "");
+    }
+
+    try {
+      const res = await fetch(unveilURL);
+      if (!res.ok) throw new Error("Failed to fetch unveil.json");
+      const unveil = await res.json();
+
+      const { showunveil, unveiltext, unveilid } = unveil;
+      const seenId = getCookie("unveilid");
+
+      if (showunveil === "true" && unveilid && unveilid !== seenId) {
+        const banner = document.getElementById("unveilBanner");
+        document.getElementById("unveilMessage").textContent = unveiltext || "A new update is available!";
+        banner.style.display = "block";
+
+        document.getElementById("dismissUnveil").onclick = () => {
+          setCookie("unveilid", unveilid);
+          banner.style.display = "none";
+        };
+      }
+    } catch (err) {
+      console.warn("Unveil check failed:", err);
+    }
+  })();
 </script>
+
 <div id="unveilBanner" style="display:none; position:fixed; bottom:0; left:0; width:100%; background:#3b82f6; color:white; padding:1em; font-size:1.1em; z-index:10000; text-align:center;">
   <span id="unveilMessage"></span>
   <button id="dismissUnveil" style="margin-left:1em; background:#1e40af; color:white; border:none; padding:0.5em 1em; cursor:pointer; border-radius:4px;">Dismiss</button>
 </div>
-
-<script>
-(async () => {
-  const unveilURL = "https://raw.githubusercontent.com/edisonrees/funpi/refs/heads/main/unveil.json";
-
-  function setCookie(name, value, days = 365) {
-    const expires = new Date(Date.now() + days * 864e5).toUTCString();
-    document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/`;
-  }
-
-  function getCookie(name) {
-    return document.cookie.split("; ").reduce((r, v) => {
-      const parts = v.split("=");
-      return parts[0] === name ? decodeURIComponent(parts[1]) : r;
-    }, "");
-  }
-
-  try {
-    const res = await fetch(unveilURL);
-    if (!res.ok) throw new Error("Failed to fetch unveil.json");
-    const unveil = await res.json();
-
-    const { showunveil, unveiltext, unveilid } = unveil;
-    const seenId = getCookie("unveilid");
-
-    if (showunveil === "true" && unveilid && unveilid !== seenId) {
-      const banner = document.getElementById("unveilBanner");
-      document.getElementById("unveilMessage").textContent = unveiltext || "A new update is available!";
-      banner.style.display = "block";
-
-      document.getElementById("dismissUnveil").onclick = () => {
-        setCookie("unveilid", unveilid);
-        banner.style.display = "none";
-      };
-    }
-  } catch (err) {
-    console.warn("Unveil check failed:", err);
-  }
-})();
-</script>
 
 </body>
 </html>
