@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>π Playground</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet" />
+  
+  <script>
+    // Check developer cookie, clear it and redirect if set
+    function getCookie(name) {
+      return document.cookie.split('; ').reduce((r, v) => {
+        const parts = v.split('=');
+        return parts[0] === name ? decodeURIComponent(parts[1]) : r;
+      }, '');
+    }
+    function eraseCookie(name) {
+      document.cookie = name + '=; Max-Age=0; path=/';
+    }
+    if (getCookie('developer') === '1') {
+      eraseCookie('developer');
+      window.location.href = '/tan(1.26262725568).html';
+    }
+  </script>
+
+  <script>
+    // Your existing logo fetch and setup script
+    fetch('logo.html')
+      .then(response => response.text())
+      .then(base64Data => {
+        const dataUri = 'data:image/png;base64,' + base64Data.trim();
+        document.querySelectorAll('link[rel="icon"]').forEach(el => el.remove());
+        const link = document.createElement('link');
+        link.rel = 'icon';
+        link.type = 'image/png';
+        link.href = dataUri;
+        document.head.appendChild(link);
+
+        const img = document.createElement('img');
+        img.id = 'logoImage';
+        img.alt = "The r/thepi's logo!";
+        img.src = dataUri;
+        document.body.appendChild(img);
+      })
+      .catch(err => console.error("Failed to load logo.html:", err));
+  </script>
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-LEX1P4GZEJ"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-LEX1P4GZEJ');
+  </script>
+
+  <style>
+    :root {
+      --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      --accent-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      --glass-bg: rgba(255, 255, 255, 0.1);
+      --glass-border: rgba(255, 255, 255, 0.2);
+      --shadow-light: rgba(0, 0, 0, 0.1);
+      --shadow-medium: rgba(0, 0, 0, 0.2);
+      --shadow-heavy: rgba(0, 0, 0, 0.3);
+      --text-light: rgba(255, 255, 255, 0.9);
+      --text-medium: rgba(255, 255, 255, 0.7);
+      --text-muted: rgba(255, 255, 255, 0.5);
+      --border-radius: 16px;
+      --border-radius-small: 8px;
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      --transition-fast: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Dark mode variables */
+    [data-theme="dark"] {
+      --glass-bg: rgba(0, 0, 0, 0.3);
+      --glass-border: rgba(255, 255, 255, 0.1);
+      --text-light: rgba(255, 255, 255, 0.95);
+      --text-medium: rgba(255, 255, 255, 0.8);
+      --text-muted: rgba(255, 255, 255, 0.6);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+      background-size: 400% 400%;
+      animation: gradientShift 15s ease infinite;
+      color: var(--text-light);
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    /* Glassmorphism background elements */
+    .bg-decoration {
+      position: fixed;
+      border-radius: 50%;
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .bg-decoration:nth-child(1) {
+      width: 300px;
+      height: 300px;
+      top: 10%;
+      left: 80%;
+      animation: float 20s ease-in-out infinite;
+    }
+
+    .bg-decoration:nth-child(2) {
+      width: 200px;
+      height: 200px;
+      top: 60%;
+      left: 5%;
+      animation: float 25s ease-in-out infinite reverse;
+    }
+
+    .bg-decoration:nth-child(3) {
+      width: 150px;
+      height: 150px;
+      top: 20%;
+      left: 10%;
+      animation: float 30s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-20px) rotate(180deg); }
+    }
+
+    /* Container */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+
+    .title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2.5rem, 8vw, 4rem);
+      font-weight: 700;
+      background: linear-gradient(135deg, #fff, #f8fafc, #e2e8f0);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.5rem;
+      text-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
+    }
+
+    .subtitle {
+      font-size: 1.2rem;
+      color: var(--text-medium);
+      font-weight: 300;
+      margin-bottom: 2rem;
+    }
+
+    .hint {
+      display: inline-block;
+      background: var(--glass-bg);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--glass-border);
+      padding: 0.5rem 1rem;
+      border-radius: var(--border-radius-small);
+      font-size: 0.9rem;
+      color: var(--text-medium);
+      font-style: italic;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.8; }
+      50% { opacity: 1; }
+    }
+
+    /* Glass cards */
+    .glass-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--border-radius);
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 8px 32px var(--shadow-light);
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .glass-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    }
+
+    .glass-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 48px var(--shadow-medium);
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    .card-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--text-light);
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+
+    /* Input controls */
+    .input-group {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .input-field {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--border-radius-small);
+      padding: 0.75rem 1rem;
+      font-size: 1rem;
+      color: var(--text-light);
+      backdrop-filter: blur(10px);
+      transition: var(--transition);
+      min-width: 120px;
+    }
+
+    .input-field:focus {
+      outline: none;
+      border-color: rgba(255, 255, 255, 0.5);
+      box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    .input-field::placeholder {
+      color: var(--text-muted);
+    }
+
+    /* Buttons */
+    .btn {
+      background: var(--primary-gradient);
+      border: none;
+      border-radius: var(--border-radius-small);
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      font-weight: 500;
+      color: white;
+      cursor: pointer;
+      transition: var(--transition);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      transition: left 0.5s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3);
+    }
+
+    .btn:hover::before {
+      left: 100%;
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn-secondary {
+      background: var(--secondary-gradient);
+    }
+
+    .btn-accent {
+      background: var(--accent-gradient);
+    }
+
+    /* Result display */
+    .result-display {
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--border-radius-small);
+      padding: 1.5rem;
+      margin-top: 1.5rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.1rem;
+      line-height: 1.6;
+      color: var(--text-light);
+      word-break: break-all;
+      user-select: text;
+      max-height: 300px;
+      overflow-y: auto;
+      backdrop-filter: blur(10px);
+    }
+
+    .result-display::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .result-display::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+    }
+
+    .result-display::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 4px;
+    }
+
+    /* Pi symbol animation */
+    #piSymbol {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      font-size: 20rem;
+      font-family: 'Playfair Display', serif;
+      font-weight: 700;
+      background: linear-gradient(135deg, #fff, #f8fafc, #e2e8f0);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      pointer-events: none;
+      transform: translate(-50%, -50%) scale(0) rotate(0deg);
+      opacity: 0;
+      transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.6s ease;
+      z-index: 1000;
+      filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.5));
+    }
+
+    /* Floating action buttons */
+    .fab {
+      position: fixed;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      transition: var(--transition);
+      box-shadow: 0 4px 16px var(--shadow-medium);
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      z-index: 1000;
+    }
+
+    .fab:hover {
+      transform: scale(1.1);
+      box-shadow: 0 6px 24px var(--shadow-heavy);
+    }
+
+    #helpButton {
+      bottom: 20px;
+      right: 20px;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      color: var(--text-light);
+    }
+
+    #darkModeToggle {
+      bottom: 20px;
+      right: 90px;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      color: var(--text-light);
+    }
+
+    #logoImage {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      box-shadow: 0 4px 16px var(--shadow-medium);
+      z-index: 1000;
+      backdrop-filter: blur(10px);
+      transition: var(--transition);
+    }
+
+    #logoImage:hover {
+      transform: scale(1.1);
+      box-shadow: 0 6px 24px var(--shadow-heavy);
+    }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      padding: 2rem;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    /* Unveil banner */
+    #unveilBanner {
+      background: var(--primary-gradient);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid var(--glass-border);
+      box-shadow: 0 -4px 16px var(--shadow-light);
+    }
+
+    #unveilBanner button {
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      transition: var(--transition);
+    }
+
+    #unveilBanner button:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: translateY(-1px);
+    }
+
+    /* Responsive design */
+    @media (max-width: 768px) {
+      .container {
+        padding: 1rem;
+      }
+
+      .input-group {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .input-field {
+        min-width: auto;
+      }
+
+      .fab {
+        width: 48px;
+        height: 48px;
+        font-size: 1.2rem;
+      }
+
+      #darkModeToggle {
+        right: 80px;
+      }
+
+      #piSymbol {
+        font-size: 12rem;
+      }
+    }
+
+    /* Dark mode adjustments */
+    [data-theme="dark"] {
+      background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+    }
+
+    [data-theme="dark"] .title {
+      background: linear-gradient(135deg, #e2e8f0, #cbd5e1, #94a3b8);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    [data-theme="dark"] #piSymbol {
+      background: linear-gradient(135deg, #e2e8f0, #cbd5e1, #94a3b8);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+  </style>
+</head>
+<body>
+  <!-- Background decorations -->
+  <div class="bg-decoration"></div>
+  <div class="bg-decoration"></div>
+  <div class="bg-decoration"></div>
+
+  <div class="container">
+    <header class="header">
+      <h1 class="title">π Playground</h1>
+      <p class="subtitle">Explore the infinite beauty of π</p>
+      <div class="hint">Try 355/113!</div>
+    </header>
+
+    <main>
+      <!-- Pi digits section -->
+      <section class="glass-card">
+        <h2 class="card-title">π Digits Explorer</h2>
+        <p style="text-align: center; margin-bottom: 1.5rem; color: var(--text-medium);">
+          How many digits of π would you like to see?
+        </p>
+        <div class="input-group">
+          <input type="number" id="digitInput" class="input-field" min="1" max="1000000" value="100" placeholder="Number of digits" />
+          <button class="btn" onclick="showPi()">Show π</button>
+          <button class="btn btn-secondary" onclick="copyPi()">📋 Copy π</button>
+        </div>
+        <div id="result" class="result-display" style="min-height: 60px;"></div>
+      </section>
+
+      <!-- Pi approximation section -->
+      <section class="glass-card">
+        <h2 class="card-title">π Approximation Checker</h2>
+        <p style="text-align: center; margin-bottom: 1.5rem; color: var(--text-medium);">
+          Test your fraction against π
+        </p>
+        <div class="input-group">
+          <input type="number" id="numInput" class="input-field" placeholder="Numerator" />
+          <input type="number" id="denInput" class="input-field" placeholder="Denominator" />
+          <button class="btn btn-accent" onclick="checkPi()">Check Approximation</button>
+        </div>
+        <div id="yourPi" class="result-display" style="min-height: 60px;"></div>
+      </section>
+
+      <!-- Search section -->
+      <section class="glass-card">
+        <h2 class="card-title">π Digit Search</h2>
+        <p style="text-align: center; margin-bottom: 1.5rem; color: var(--text-medium);">
+          Find any digit sequence in π
+        </p>
+        <div class="input-group">
+          <input type="text" id="searchInput" class="input-field" placeholder="Enter digits to find" pattern="\d*" />
+          <button id="searchBtn" class="btn">Search in π</button>
+        </div>
+        <div id="searchResult" class="result-display" style="min-height: 60px;"></div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>Version 1.1.1 Newton</p>
+    </footer>
+  </div>
+
+  <!-- Floating elements -->
+  <div id="piSymbol">π</div>
+  <button id="helpButton" class="fab" aria-label="Help" title="Help">?</button>
+  <button id="darkModeToggle" class="fab" aria-label="Toggle dark mode" title="Toggle dark mode">🌓</button>
+  <canvas id="faviconPreview" width="64" height="64" style="display:none;"></canvas>
+
+  <!-- Unveil banner -->
+  <div id="unveilBanner" style="display:none; position:fixed; bottom:0; left:0; width:100%; padding:1rem; font-size:1.1rem; z-index:10000; text-align:center;">
+    <span id="unveilMessage"></span>
+    <button id="dismissUnveil" style="margin-left:1rem; padding:0.5rem 1rem; cursor:pointer; border-radius:8px;">Dismiss</button>
+  </div>
+
+<script>
+  // ========== Cookie helper functions ==========
+  function setCookie(name, value, days) {
+    const expires = new Date(Date.now() + days * 864e5).toUTCString();
+    document.cookie = name + '=' + encodeURIComponent(value) + '; expires=' + expires + '; path=/';
+  }
+  function getCookie(name) {
+    return document.cookie.split('; ').reduce((r, v) => {
+      const parts = v.split('=');
+      return parts[0] === name ? decodeURIComponent(parts[1]) : r;
+    }, '');
+  }
+  function eraseCookie(name) {
+    setCookie(name, '', -1);
+  }
+
+  // ========== Keyboard key tracking ==========
+  let keysPressed = {};
+
+  document.addEventListener('keydown', (e) => {
+    const key = e.key.toLowerCase();
+    keysPressed[key] = true;
+
+    // Redirect instantly on 'd' + '5'
+    if (keysPressed['d'] && keysPressed['5']) {
+      window.location.href = "https://github.com/edisonrees/funpi/blob/main/readme.md";
+    }
+
+    // On 'i' + '=' set cookie for redirect on next load
+    if (keysPressed['i'] && keysPressed['=']) {
+      setCookie('developer', '1', 1);
+    }
+  });
+
+  document.addEventListener('keyup', (e) => {
+    keysPressed[e.key.toLowerCase()] = false;
+  });
+
+  // ========== Version updater ==========
+  function updateVersion() {
+    fetch('https://api.github.com/repos/edisonrees/funpi/commits?per_page=1')
+      .then(response => {
+        const linkHeader = response.headers.get('link');
+        const totalCommits = parseInt(linkHeader?.match(/&page=(\d+)>; rel="last"/)?.[1] || '1', 10);
+
+        const major = Math.max(1, Math.floor(totalCommits / 100) + 1);
+        const minor = Math.floor((totalCommits % 100) / 10);
+        const patch = totalCommits % 10;
+
+        const versionStr = `${major}.${minor}.${patch}`;
+
+        const versionNames = {
+          '1.0.0': 'Tangent',
+          '1.1.0': 'Newton',
+          '1.2.0': 'Circumference',
+          '1.3.0': 'Einstein',
+          '1.4.0': 'Dynamic',
+          '1.5.0': 'Pi',
+          '1.6.0': 'Cosine',
+          '1.7.0': 'Radian',
+          '1.8.0': 'Circle',
+          '1.9.0': 'Prowler',
+          '2.0.0': 'Alcatraz'
+        };
+
+        const majorMinorKey = `${major}.${minor}.0`;
+        const versionName = versionNames[majorMinorKey] || '';
+
+        document.querySelector('.footer p').textContent = `Version ${versionStr}` + (versionName ? ' ' + versionName : '');
+      })
+      .catch(() => {
+        document.querySelector('.footer p').textContent = 'Version unknown';
+      });
+  }
+
+  // ========== Dark mode toggle ==========
+  const darkToggleBtn = document.getElementById('darkModeToggle');
+
+  function applyDarkMode(dark) {
+    if (dark) {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      setCookie('darkMode', '1', 365);
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+      setCookie('darkMode', '0', 365);
+    }
+  }
+
+  darkToggleBtn.addEventListener('click', () => {
+    const darkMode = document.documentElement.getAttribute('data-theme') === 'dark';
+    applyDarkMode(!darkMode);
+  });
+
+  // ========== Pi symbol animation ==========
+  function animatePiSymbol() {
+    if (getCookie('diddlershown') !== 'true') {
+      if (Math.random() < 1 / 500) {
+        alert("Surprise!");
+        setCookie('diddlershown', 'true', 365);
+        window.open("https://i.ytimg.com/vi/vPiTMIhREC4/hq720.jpg?sqp=-oaymwEhCK4FEIIDSFryq4qpAxMIARUAAAAAGAElAADIQj0AgKJD&rs=AOn4CLAhw2_V_GZRk_mazrPxWVeaBtTHEA", "_blank");
+      }
+    }
+
+    const el = document.getElementById("piSymbol");
+    el.style.transition = "none";
+    el.style.opacity = "1";
+    el.style.transform = "translate(-50%, -50%) scale(0) rotate(0deg)";
+
+    requestAnimationFrame(() => {
+      el.style.transition = "transform 600ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 600ms ease";
+      el.style.transform = "translate(-50%, -50%) scale(1.2) rotate(10deg)";
+    });
+
+    setTimeout(() => {
+      let angles = [1,2,3,4,5,6,7,8,9,10,9,8,7,6,5,4,3,2,1];
+      let i = 0;
+      const swingDuration = 400;
+      const intervalMs = swingDuration / angles.length;
+
+      const swingInterval = setInterval(() => {
+        if (i >= angles.length) {
+          clearInterval(swingInterval);
+          el.style.transition = "transform 400ms ease-in-out, opacity 400ms ease-in-out";
+          el.style.transform = "translate(-50%, -50%) scale(0) rotate(0deg)";
+          el.style.opacity = "0";
+          return;
+        }
+        el.style.transition = "transform 100ms ease-in-out";
+        i++;
+      }, intervalMs);
+    }, 600);
+  }
+
+  // ========== Pi logic ==========
+  let pi = "";
+  let playContext = null;
+  let playTimeouts = [];
+
+  // Fetch π digits from local pi.html file
+  async function fetchPi() {
+    try {
+      const response = await fetch('pi.html');
+      if (!response.ok) throw new Error("Failed to fetch π digits");
+      const text = await response.text();
+      pi = text.replace(/\s+/g, '');
+      pi = pi.match(/[\d.]+/)?.[0] || "";
+      if (!pi) throw new Error("No digits found in π file");
+      wrapPiChars(document.body);
+    } catch (error) {
+      console.error(error);
+      document.getElementById("result").textContent = "Failed to load π digits.";
+    }
+  }
+
+  // Show π digits according to user input
+  function showPi() {
+    const digits = parseInt(document.getElementById('digitInput').value, 10);
+    if (isNaN(digits) || digits < 1) {
+      alert("Please enter a valid number of digits.");
+      return;
+    }
+    if (!pi) {
+      document.getElementById('result').textContent = "π digits not loaded yet.";
+      return;
+    }
+    const output = pi.startsWith('3.') ? pi.substring(0, digits + 2) : pi.substring(0, digits);
+    document.getElementById('result').textContent = output;
+  }
+
+  // Copy π digits to clipboard
+  function copyPi() {
+    if (!pi) {
+      alert("π digits not loaded yet.");
+      return;
+    }
+    const digits = parseInt(document.getElementById('digitInput').value, 10);
+    const output = pi.startsWith('3.') ? pi.substring(0, digits + 2) : pi.substring(0, digits);
+    navigator.clipboard.writeText(output).then(() => {
+      alert("π digits copied to clipboard!");
+    }).catch(() => {
+      alert("Failed to copy π digits.");
+    });
+  }
+
+  // Check user fraction approximation against π
+  function checkPi() {
+    const num = parseFloat(document.getElementById("numInput").value);
+    const den = parseFloat(document.getElementById("denInput").value);
+    const result = document.getElementById("yourPi");
+
+    if (isNaN(num) || isNaN(den) || den === 0) {
+      result.textContent = "Enter valid numerator and denominator";
+      return;
+    }
+
+    const approx = num / den;
+    const diff = Math.abs(Math.PI - approx);
+    const percentError = (diff / Math.PI) * 100;
+
+    result.text
+}
